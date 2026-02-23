@@ -1,0 +1,19 @@
+{
+  "manifest_version": 3,
+  "name": "WhatsApp Web - Mensajes Rápidos",
+  "description": "Guarda y usa mensajes predeterminados en WhatsApp Web con escritura simulada",
+  "version": "1.0.0",
+  "permissions": ["storage"],
+  "host_permissions": ["https://web.whatsapp.com/*"],
+  "content_scripts": [
+    {
+      "matches": ["https://web.whatsapp.com/*"],
+      "js": ["content.js"],
+      "css": ["styles.css"],
+      "run_at": "document_idle"
+    }
+  ],
+  "action": {
+    "default_title": "WhatsApp Mensajes Rápidos"
+  }
+}

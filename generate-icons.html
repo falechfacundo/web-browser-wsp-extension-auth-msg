@@ -1,0 +1,169 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Generador de Iconos - WhatsApp Mensajes Rápidos</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        max-width: 800px;
+        margin: 50px auto;
+        padding: 20px;
+        background: #f5f5f5;
+      }
+      .container {
+        background: white;
+        padding: 30px;
+        border-radius: 10px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+      }
+      h1 {
+        color: #25d366;
+        text-align: center;
+      }
+      .icons-preview {
+        display: flex;
+        justify-content: space-around;
+        margin: 30px 0;
+        flex-wrap: wrap;
+      }
+      .icon-item {
+        text-align: center;
+        margin: 10px;
+      }
+      .icon-item canvas {
+        border: 2px solid #ddd;
+        border-radius: 8px;
+        margin: 10px 0;
+      }
+      button {
+        background: #25d366;
+        color: white;
+        border: none;
+        padding: 12px 24px;
+        border-radius: 6px;
+        cursor: pointer;
+        font-size: 16px;
+        display: block;
+        margin: 20px auto;
+      }
+      button:hover {
+        background: #128c7e;
+      }
+      .instructions {
+        background: #f0f8ff;
+        padding: 15px;
+        border-radius: 6px;
+        margin-top: 20px;
+        border-left: 4px solid #25d366;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>🖼️ Generador de Iconos</h1>
+      <p style="text-align: center">
+        Genera iconos personalizados para tu extensión de Chrome
+      </p>
+
+      <div class="icons-preview" id="iconPreview"></div>
+
+      <button onclick="generateIcons()">🎨 Generar Iconos</button>
+      <button onclick="downloadAllIcons()" style="background: #0084ff">
+        📥 Descargar Todos los Iconos
+      </button>
+
+      <div class="instructions">
+        <h3>📋 Instrucciones:</h3>
+        <ol>
+          <li>Haz clic en "Generar Iconos" para crear los iconos</li>
+          <li>Haz clic en "Descargar Todos los Iconos" para guardarlos</li>
+          <li>Guarda los archivos en la carpeta de tu extensión</li>
+          <li>Descomenta la sección de iconos en <code>manifest.json</code></li>
+        </ol>
+      </div>
+    </div>
+
+    <script>
+      const sizes = [16, 48, 128];
+      const canvases = {};
+
+      function generateIcons() {
+        const container = document.getElementById("iconPreview");
+        container.innerHTML = "";
+
+        sizes.forEach((size) => {
+          const iconItem = document.createElement("div");
+          iconItem.className = "icon-item";
+
+          const canvas = document.createElement("canvas");
+          canvas.width = size;
+          canvas.height = size;
+          canvases[size] = canvas;
+
+          const ctx = canvas.getContext("2d");
+
+          // Fondo verde WhatsApp
+          ctx.fillStyle = "#25D366";
+          ctx.fillRect(0, 0, size, size);
+
+          // Círculo blanco
+          const margin = size / 6;
+          ctx.fillStyle = "white";
+          ctx.beginPath();
+          ctx.arc(size / 2, size / 2, size / 2 - margin, 0, Math.PI * 2);
+          ctx.fill();
+
+          // Dibujar líneas que simulan un documento
+          ctx.fillStyle = "#25D366";
+          const lineMargin = size / 4;
+          const lineSpacing = size / 10;
+          const lineWidth = size >= 48 ? 3 : 2;
+          const numLines = 3;
+
+          for (let i = 0; i < numLines; i++) {
+            const y = size / 3 + i * lineSpacing;
+            ctx.fillRect(lineMargin, y, size - lineMargin * 2, lineWidth);
+          }
+
+          const label = document.createElement("div");
+          label.textContent = `${size}×${size}`;
+          label.style.fontWeight = "bold";
+          label.style.marginTop = "10px";
+
+          const downloadBtn = document.createElement("button");
+          downloadBtn.textContent = `⬇ Descargar`;
+          downloadBtn.style.fontSize = "12px";
+          downloadBtn.style.padding = "6px 12px";
+          downloadBtn.style.margin = "10px auto";
+          downloadBtn.onclick = () => downloadIcon(size);
+
+          iconItem.appendChild(label);
+          iconItem.appendChild(canvas);
+          iconItem.appendChild(downloadBtn);
+          container.appendChild(iconItem);
+        });
+      }
+
+      function downloadIcon(size) {
+        const canvas = canvases[size];
+        if (canvas) {
+          const link = document.createElement("a");
+          link.download = `icon${size}.png`;
+          link.href = canvas.toDataURL("image/png");
+          link.click();
+        }
+      }
+
+      function downloadAllIcons() {
+        sizes.forEach((size, index) => {
+          setTimeout(() => downloadIcon(size), index * 500);
+        });
+      }
+
+      // Generar automáticamente al cargar
+      window.onload = generateIcons;
+    </script>
+  </body>
+</html>

@@ -1,0 +1,441 @@
+/* WhatsApp Web - Mensajes Rápidos - Estilos */
+
+/* ==================== SIDEBAR PRINCIPAL ==================== */
+
+.waqm-sidebar {
+  position: fixed;
+  top: 0;
+  right: 0;
+  width: 320px;
+  height: 100vh;
+  background: #ffffff;
+  border-left: 1px solid #d1d7db;
+  box-shadow: -2px 0 10px rgba(0, 0, 0, 0.1);
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  font-family:
+    -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial,
+    sans-serif;
+  overflow: hidden;
+  transition: width 0.3s ease;
+}
+
+.waqm-sidebar.waqm-minimized {
+  width: 50px;
+}
+
+/* ==================== HEADER ==================== */
+
+.waqm-header {
+  background: linear-gradient(135deg, #00a884 0%, #008069 100%);
+  color: white;
+  padding: 15px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  flex-shrink: 0;
+}
+
+.waqm-header h3 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.waqm-toggle-btn {
+  background: rgba(255, 255, 255, 0.2);
+  color: white;
+  border: none;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  cursor: pointer;
+  font-size: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s;
+}
+
+.waqm-toggle-btn:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+/* ==================== CONTENIDO ==================== */
+
+.waqm-content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 15px;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ==================== SPEED CONTROL ==================== */
+
+.waqm-speed-control {
+  background: #f0f2f5;
+  border-radius: 8px;
+  padding: 12px;
+  margin-bottom: 15px;
+  border: 1px solid #e9edef;
+}
+
+.waqm-speed-label {
+  display: block;
+  font-size: 12px;
+  font-weight: 600;
+  color: #667781;
+  margin-bottom: 8px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.waqm-speed-slider-container {
+  position: relative;
+}
+
+.waqm-speed-slider {
+  width: 100%;
+  height: 6px;
+  border-radius: 3px;
+  background: #d1d7db;
+  outline: none;
+  -webkit-appearance: none;
+  appearance: none;
+  cursor: pointer;
+}
+
+.waqm-speed-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #00a884;
+  cursor: pointer;
+  transition: all 0.2s;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.waqm-speed-slider::-webkit-slider-thumb:hover {
+  background: #008069;
+  transform: scale(1.15);
+  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.3);
+}
+
+.waqm-speed-slider::-moz-range-thumb {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #00a884;
+  cursor: pointer;
+  border: none;
+  transition: all 0.2s;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.waqm-speed-slider::-moz-range-thumb:hover {
+  background: #008069;
+  transform: scale(1.15);
+  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.3);
+}
+
+.waqm-speed-labels {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 6px;
+}
+
+.waqm-speed-labels span {
+  font-size: 11px;
+  color: #667781;
+  font-weight: 500;
+}
+
+/* ==================== FOLDERS CONTAINER ==================== */
+
+.waqm-folders-container {
+  flex: 1;
+  margin-bottom: 15px;
+}
+
+/* ==================== BOTONES ==================== */
+
+.waqm-btn {
+  padding: 10px 15px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  transition: all 0.2s;
+  display: block;
+  width: 100%;
+  text-align: center;
+}
+
+.waqm-btn-primary {
+  background: #00a884;
+  color: white;
+}
+
+.waqm-btn-primary:hover {
+  background: #008069;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 5px rgba(0, 168, 132, 0.3);
+}
+
+.waqm-btn-secondary {
+  background: #f0f2f5;
+  color: #3b4a54;
+  margin-top: 8px;
+  font-size: 13px;
+  padding: 8px 12px;
+}
+
+.waqm-btn-secondary:hover {
+  background: #e5e7eb;
+}
+
+.waqm-btn-small {
+  padding: 5px 10px;
+  font-size: 12px;
+}
+
+.waqm-btn-mini {
+  padding: 2px 6px;
+  font-size: 14px;
+  width: 20px;
+  height: 20px;
+}
+
+.waqm-btn-icon {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 16px;
+  padding: 4px;
+  transition: transform 0.2s;
+  opacity: 0.7;
+}
+
+.waqm-btn-icon:hover {
+  transform: scale(1.2);
+  opacity: 1;
+}
+
+/* ==================== CARPETAS ==================== */
+
+.waqm-folder {
+  background: #ffffff;
+  border: 1px solid #e9edef;
+  border-radius: 8px;
+  margin-bottom: 12px;
+  overflow: hidden;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.waqm-folder-header {
+  background: #f0f2f5;
+  padding: 10px 12px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid #e9edef;
+}
+
+.waqm-folder-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  flex: 1;
+  user-select: none;
+}
+
+.waqm-folder-title:hover .waqm-folder-name {
+  color: #00a884;
+}
+
+.waqm-collapse-icon {
+  font-size: 12px;
+  color: #667781;
+  width: 16px;
+  display: inline-block;
+  text-align: center;
+}
+
+.waqm-folder-name {
+  font-weight: 600;
+  font-size: 14px;
+  color: #111b21;
+  transition: color 0.2s;
+}
+
+.waqm-folder-actions {
+  display: flex;
+  gap: 4px;
+}
+
+.waqm-messages-container {
+  padding: 8px;
+}
+
+/* ==================== MENSAJES ==================== */
+
+.waqm-message {
+  background: #ffffff;
+  border: 1px solid #e9edef;
+  border-radius: 6px;
+  padding: 10px;
+  margin-bottom: 8px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  transition: all 0.2s;
+  cursor: pointer;
+}
+
+.waqm-message:hover {
+  background: #f7f8fa;
+  border-color: #00a884;
+  box-shadow: 0 2px 4px rgba(0, 168, 132, 0.1);
+  transform: translateX(-2px);
+}
+
+.waqm-message-content {
+  flex: 1;
+  overflow: hidden;
+}
+
+.waqm-message-name {
+  font-weight: 600;
+  font-size: 13px;
+  color: #111b21;
+  margin-bottom: 4px;
+}
+
+.waqm-message-preview {
+  font-size: 12px;
+  color: #667781;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  line-height: 1.4;
+}
+
+.waqm-message-actions {
+  display: flex;
+  gap: 4px;
+  margin-left: 8px;
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+
+.waqm-message:hover .waqm-message-actions {
+  opacity: 1;
+}
+
+/* ==================== SCROLLBAR ==================== */
+
+.waqm-content::-webkit-scrollbar {
+  width: 6px;
+}
+
+.waqm-content::-webkit-scrollbar-track {
+  background: #f0f2f5;
+}
+
+.waqm-content::-webkit-scrollbar-thumb {
+  background: #a0a8ab;
+  border-radius: 3px;
+}
+
+.waqm-content::-webkit-scrollbar-thumb:hover {
+  background: #667781;
+}
+
+/* ==================== ESTADOS VACÍOS ==================== */
+
+.waqm-empty-state {
+  text-align: center;
+  padding: 20px;
+  color: #667781;
+  font-size: 13px;
+}
+
+/* ==================== RESPONSIVE ==================== */
+
+@media (max-width: 1200px) {
+  .waqm-sidebar {
+    width: 280px;
+  }
+}
+
+@media (max-width: 768px) {
+  .waqm-sidebar {
+    width: 100%;
+    border-left: none;
+  }
+}
+
+/* ==================== ANIMACIONES ==================== */
+
+@keyframes slideInRight {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+.waqm-sidebar {
+  animation: slideInRight 0.3s ease-out;
+}
+
+/* ==================== AJUSTES PARA WHATSAPP WEB ==================== */
+
+/* Asegurar que el sidebar no interfiera con WhatsApp */
+body {
+  margin-right: 0 !important;
+}
+
+/* En caso de que WhatsApp tenga un contenedor principal */
+#app {
+  margin-right: 0 !important;
+}
+
+/* ==================== EXPAND BUTTON ==================== */
+
+.waqm-expand-btn {
+  position: fixed;
+  top: 50%;
+  right: 0;
+  transform: translateY(-50%);
+  background: linear-gradient(135deg, #00a884 0%, #008069 100%);
+  color: white;
+  border: none;
+  border-radius: 8px 0 0 8px;
+  width: 32px;
+  height: 60px;
+  cursor: pointer;
+  font-size: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9998;
+  box-shadow: -2px 0 10px rgba(0, 0, 0, 0.2);
+  transition: all 0.3s ease;
+}
+
+.waqm-expand-btn:hover {
+  width: 40px;
+  background: linear-gradient(135deg, #00c89e 0%, #00a884 100%);
+  box-shadow: -3px 0 15px rgba(0, 0, 0, 0.3);
+}
