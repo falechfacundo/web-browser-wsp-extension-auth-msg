@@ -8,7 +8,14 @@
   "content_scripts": [
     {
       "matches": ["https://web.whatsapp.com/*"],
-      "js": ["content.js"],
+      "js": [
+        "storage.js",
+        "typing.js",
+        "ui-modals.js",
+        "ui-folders.js",
+        "ui-sidebar.js",
+        "init.js"
+      ],
       "css": ["styles.css"],
       "run_at": "document_idle"
     }

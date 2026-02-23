@@ -230,7 +230,7 @@
 /* ==================== CARPETAS ==================== */
 
 .waqm-folder {
-  background: #ffffff;
+  /* El background se aplica dinámicamente según el color seleccionado */
   border: 1px solid #e9edef;
   border-radius: 8px;
   margin-bottom: 12px;
@@ -239,12 +239,12 @@
 }
 
 .waqm-folder-header {
-  background: #f0f2f5;
+  /* El background se hereda del contenedor padre (.waqm-folder) */
   padding: 10px 12px;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  border-bottom: 1px solid #e9edef;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
 }
 
 .waqm-folder-title {
@@ -438,4 +438,257 @@ body {
   width: 40px;
   background: linear-gradient(135deg, #00c89e 0%, #00a884 100%);
   box-shadow: -3px 0 15px rgba(0, 0, 0, 0.3);
+}
+
+/* ==================== MODAL PERSONALIZADO ==================== */
+
+.waqm-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 10000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: fadeIn 0.2s ease-out;
+}
+
+.waqm-modal {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+  max-width: 500px;
+  width: 90%;
+  max-height: 80vh;
+  display: flex;
+  flex-direction: column;
+  animation: slideUp 0.3s ease-out;
+}
+
+.waqm-modal-header {
+  padding: 20px;
+  border-bottom: 1px solid #e9edef;
+  background: #f0f2f5;
+  border-radius: 12px 12px 0 0;
+}
+
+.waqm-modal-title {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 600;
+  color: #111b21;
+}
+
+.waqm-modal-body {
+  padding: 20px;
+  overflow-y: auto;
+}
+
+.waqm-modal-field {
+  margin-bottom: 16px;
+}
+
+.waqm-modal-label {
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+  color: #667781;
+  margin-bottom: 8px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.waqm-modal-input,
+.waqm-modal-textarea {
+  width: 100%;
+  padding: 12px;
+  border: 2px solid #e9edef;
+  border-radius: 8px;
+  font-family:
+    -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial,
+    sans-serif;
+  font-size: 14px;
+  color: #111b21;
+  box-sizing: border-box;
+  transition: border-color 0.2s;
+}
+
+.waqm-modal-input:focus,
+.waqm-modal-textarea:focus {
+  outline: none;
+  border-color: #00a884;
+}
+
+.waqm-modal-textarea {
+  min-height: 120px;
+  resize: vertical;
+  line-height: 1.5;
+  font-family: inherit;
+}
+
+.waqm-modal-footer {
+  padding: 16px 20px;
+  border-top: 1px solid #e9edef;
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+}
+
+.waqm-modal-btn {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.waqm-modal-btn-primary {
+  background: #00a884;
+  color: white;
+}
+
+.waqm-modal-btn-primary:hover {
+  background: #008069;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(0, 168, 132, 0.3);
+}
+
+.waqm-modal-btn-secondary {
+  background: #f0f2f5;
+  color: #3b4a54;
+}
+
+.waqm-modal-btn-secondary:hover {
+  background: #e5e7eb;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+/* ==================== AUTO-SEND TOGGLE ==================== */
+
+.waqm-auto-send-control {
+  background: #f0f2f5;
+  border-radius: 8px;
+  padding: 12px;
+  margin-bottom: 15px;
+  border: 1px solid #e9edef;
+}
+
+.waqm-auto-send-label {
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  position: relative;
+  user-select: none;
+}
+
+.waqm-auto-send-toggle {
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.waqm-toggle-slider {
+  position: relative;
+  display: inline-block;
+  width: 44px;
+  height: 24px;
+  background: #d1d7db;
+  border-radius: 24px;
+  transition: background 0.3s;
+  margin-right: 10px;
+}
+
+.waqm-toggle-slider::before {
+  content: "";
+  position: absolute;
+  height: 18px;
+  width: 18px;
+  left: 3px;
+  top: 3px;
+  background: white;
+  border-radius: 50%;
+  transition: transform 0.3s;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.waqm-auto-send-toggle:checked + .waqm-toggle-slider {
+  background: #00a884;
+}
+
+.waqm-auto-send-toggle:checked + .waqm-toggle-slider::before {
+  transform: translateX(20px);
+}
+
+.waqm-auto-send-text {
+  font-size: 13px;
+  font-weight: 600;
+  color: #3b4a54;
+}
+
+/* ==================== COLOR PICKER ==================== */
+
+.waqm-color-picker {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.waqm-color-option {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s;
+  border: 2px solid transparent;
+}
+
+.waqm-color-option:hover {
+  transform: translateX(4px);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+}
+
+.waqm-color-option.waqm-color-selected {
+  border: 2px solid #111b21;
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.15);
+}
+
+.waqm-color-dot {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.waqm-color-option span {
+  font-size: 13px;
+  font-weight: 500;
+  color: #3b4a54;
 }
