@@ -297,6 +297,7 @@
   align-items: center;
   transition: all 0.2s;
   cursor: pointer;
+  position: relative;
 }
 
 .waqm-message:hover {
@@ -337,6 +338,56 @@
 
 .waqm-message:hover .waqm-message-actions {
   opacity: 1;
+}
+
+/* Estado escribiendo */
+.waqm-message-writing {
+  background: #e7f5f1 !important;
+  border-color: #00a884 !important;
+  box-shadow: 0 0 0 2px rgba(0, 168, 132, 0.2) !important;
+  animation: pulse-writing 1.5s ease-in-out infinite;
+}
+
+.waqm-message-writing::before {
+  content: '✍️';
+  position: absolute;
+  left: -8px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 18px;
+  animation: bounce-writing 0.6s ease-in-out infinite;
+}
+
+.waqm-message-writing .waqm-message-name::after {
+  content: ' (Escribiendo...)';
+  color: #00a884;
+  font-weight: 500;
+  font-size: 11px;
+  animation: dots-writing 1.5s steps(4, end) infinite;
+}
+
+@keyframes pulse-writing {
+  0%, 100% {
+    box-shadow: 0 0 0 2px rgba(0, 168, 132, 0.2);
+  }
+  50% {
+    box-shadow: 0 0 0 4px rgba(0, 168, 132, 0.3);
+  }
+}
+
+@keyframes bounce-writing {
+  0%, 100% {
+    transform: translateY(-50%);
+  }
+  50% {
+    transform: translateY(-60%);
+  }
+}
+
+@keyframes dots-writing {
+  0%, 20% { content: ' (Escribiendo.)'}
+  40% { content: ' (Escribiendo..)'}
+  60%, 100% { content: ' (Escribiendo...)'}
 }
 
 /* ==================== SCROLLBAR ==================== */

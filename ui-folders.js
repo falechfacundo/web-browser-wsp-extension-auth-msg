@@ -119,7 +119,7 @@ function createMessageElement(message, folderId) {
   messageDiv
     .querySelector('[data-action="use-message"]')
     .addEventListener("click", () => {
-      window.useMessage(message.text);
+      window.useMessage(message.text, message.id);
     });
   messageDiv
     .querySelector('[data-action="edit-message"]')

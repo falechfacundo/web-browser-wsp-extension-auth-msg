@@ -49,10 +49,23 @@ function getTypingDelayParams() {
 }
 
 // Función principal para usar un mensaje con tipeo anti-detección de bot
-async function useMessage(text) {
+async function useMessage(text, messageId = null) {
+  // Marcar el mensaje como "escribiendo" en la UI
+  let messageElement = null;
+  if (messageId) {
+    messageElement = document.querySelector(`[data-message-id="${messageId}"]`);
+    if (messageElement) {
+      messageElement.classList.add('waqm-message-writing');
+    }
+  }
+
   const inputBox = findWhatsAppInputBox();
 
   if (!inputBox) {
+    // Remover estado de escritura si hay error
+    if (messageElement) {
+      messageElement.classList.remove('waqm-message-writing');
+    }
     alert(
       "No se encontró el campo de texto de WhatsApp. Asegúrate de tener una conversación abierta.",
     );
@@ -78,13 +91,12 @@ async function useMessage(text) {
 
     // Manejar saltos de línea de forma especial
     if (char === "\n") {
-      // Disparar eventos de Shift + Enter (salto de línea en WhatsApp)
+      // Disparar eventos de Enter
       const keydownEvent = new KeyboardEvent("keydown", {
         key: "Enter",
         code: "Enter",
         keyCode: 13,
         which: 13,
-        shiftKey: true,
         bubbles: true,
         cancelable: true,
         composed: true,
@@ -114,7 +126,6 @@ async function useMessage(text) {
         code: "Enter",
         keyCode: 13,
         which: 13,
-        shiftKey: true,
         bubbles: true,
         cancelable: true,
         composed: true,
@@ -221,6 +232,11 @@ async function useMessage(text) {
     if (sendButton) {
       sendButton.click();
     }
+  }
+
+  // Remover estado de escritura al finalizar
+  if (messageElement) {
+    messageElement.classList.remove('waqm-message-writing');
   }
 }
 
