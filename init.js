@@ -19,6 +19,7 @@ window.appData = {
   folders: [],
   typingSpeed: "normal", // 'slow', 'normal', 'fast'
   autoSend: false, // Envío automático de mensajes
+  debugMode: false, // Modo debug: muestra logs de cada tecla
   // Estructura de datos:
   // folders: [
   //   {

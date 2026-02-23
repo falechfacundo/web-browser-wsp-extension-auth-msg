@@ -55,16 +55,33 @@ async function useMessage(text, messageId = null) {
   if (messageId) {
     messageElement = document.querySelector(`[data-message-id="${messageId}"]`);
     if (messageElement) {
-      messageElement.classList.add('waqm-message-writing');
+      messageElement.classList.add("waqm-message-writing");
     }
   }
-
+  // Debug logging
+  const debugMode = window.appData.debugMode;
+  if (debugMode) {
+    console.log(
+      "%c🐛 [DEBUG] Iniciando escritura de mensaje",
+      "background: #8b5cf6; color: white; padding: 2px 6px; border-radius: 2px;",
+    );
+    console.log(
+      "%c📝 Texto completo:",
+      "color: #8b5cf6; font-weight: bold;",
+      text,
+    );
+    console.log(
+      "%c⏱️ Velocidad:",
+      "color: #8b5cf6; font-weight: bold;",
+      window.appData.typingSpeed,
+    );
+  }
   const inputBox = findWhatsAppInputBox();
 
   if (!inputBox) {
     // Remover estado de escritura si hay error
     if (messageElement) {
-      messageElement.classList.remove('waqm-message-writing');
+      messageElement.classList.remove("waqm-message-writing");
     }
     alert(
       "No se encontró el campo de texto de WhatsApp. Asegúrate de tener una conversación abierta.",
@@ -86,94 +103,69 @@ async function useMessage(text, messageId = null) {
 
   // Escribir carácter por carácter simulando escritura humana realista
   for (let i = 0; i < text.length; i++) {
-    const char = text[i];
+    let char = text[i];
+
+    // Convertir saltos de línea a espacios
+    if (char === "\n") {
+      char = " ";
+      if (debugMode) {
+        console.log(
+          `%c⏎ [${i}] SALTO DE LÍNEA → ESPACIO`,
+          "color: #00a884; font-weight: bold;",
+        );
+      }
+    }
+
     const keyCode = char.charCodeAt(0);
 
-    // Manejar saltos de línea de forma especial
-    if (char === "\n") {
-      // Disparar eventos de Enter
-      const keydownEvent = new KeyboardEvent("keydown", {
-        key: "Enter",
-        code: "Enter",
-        keyCode: 13,
-        which: 13,
-        bubbles: true,
-        cancelable: true,
-        composed: true,
-      });
-      inputBox.dispatchEvent(keydownEvent);
+    if (debugMode && char !== " ") {
+      console.log(
+        `%c⌨️ [${i}] "${char}" (keyCode: ${keyCode}) - Dispatching key events`,
+        "color: #0088cc;",
+      );
+    }
 
-      // Insertar salto de línea
-      if (document.execCommand) {
-        document.execCommand("insertLineBreak", false);
-      } else {
-        // Fallback: insertar <br> o <div>
-        const br = document.createElement("br");
-        const selection = window.getSelection();
-        if (selection.rangeCount > 0) {
-          const range = selection.getRangeAt(0);
-          range.deleteContents();
-          range.insertNode(br);
-          range.setStartAfter(br);
-          range.setEndAfter(br);
-          selection.removeAllRanges();
-          selection.addRange(range);
-        }
-      }
+    // ======== CADENA COMPLETA DE EVENTOS DEL DOM ========
+    // Disparar keydown
+    const keydownEvent = new KeyboardEvent("keydown", {
+      key: char,
+      code: `Key${char.toUpperCase()}`,
+      keyCode: keyCode,
+      which: keyCode,
+      bubbles: true,
+      cancelable: true,
+      composed: true,
+    });
+    inputBox.dispatchEvent(keydownEvent);
 
-      const keyupEvent = new KeyboardEvent("keyup", {
-        key: "Enter",
-        code: "Enter",
-        keyCode: 13,
-        which: 13,
-        bubbles: true,
-        cancelable: true,
-        composed: true,
-      });
-      inputBox.dispatchEvent(keyupEvent);
+    // Disparar keypress (deprecated pero algunos sistemas lo usan)
+    const keypressEvent = new KeyboardEvent("keypress", {
+      key: char,
+      code: `Key${char.toUpperCase()}`,
+      keyCode: keyCode,
+      which: keyCode,
+      charCode: keyCode,
+      bubbles: true,
+      cancelable: true,
+      composed: true,
+    });
+    inputBox.dispatchEvent(keypressEvent);
+
+    // Insertar el carácter usando execCommand (simula escritura real)
+    if (document.execCommand) {
+      document.execCommand("insertText", false, char);
     } else {
-      // ======== 2a. CADENA COMPLETA DE EVENTOS DEL DOM ========
-      // Disparar keydown
-      const keydownEvent = new KeyboardEvent("keydown", {
-        key: char,
-        code: `Key${char.toUpperCase()}`,
-        keyCode: keyCode,
-        which: keyCode,
-        bubbles: true,
-        cancelable: true,
-        composed: true,
-      });
-      inputBox.dispatchEvent(keydownEvent);
+      // Fallback: insertar manualmente
+      const currentText = inputBox.textContent || "";
+      inputBox.textContent = currentText + char;
 
-      // Disparar keypress (deprecated pero algunos sistemas lo usan)
-      const keypressEvent = new KeyboardEvent("keypress", {
-        key: char,
-        code: `Key${char.toUpperCase()}`,
-        keyCode: keyCode,
-        which: keyCode,
-        charCode: keyCode,
-        bubbles: true,
-        cancelable: true,
-        composed: true,
-      });
-      inputBox.dispatchEvent(keypressEvent);
-
-      // Insertar el carácter usando execCommand (simula escritura real)
-      if (document.execCommand) {
-        document.execCommand("insertText", false, char);
-      } else {
-        // Fallback: insertar manualmente
-        const currentText = inputBox.textContent || "";
-        inputBox.textContent = currentText + char;
-
-        // Mover el cursor al final
-        const range = document.createRange();
-        const sel = window.getSelection();
-        range.selectNodeContents(inputBox);
-        range.collapse(false);
-        sel.removeAllRanges();
-        sel.addRange(range);
-      }
+      // Mover el cursor al final
+      const range = document.createRange();
+      const sel = window.getSelection();
+      range.selectNodeContents(inputBox);
+      range.collapse(false);
+      sel.removeAllRanges();
+      sel.addRange(range);
     }
 
     // Disparar evento input (el más importante para WhatsApp Web)
@@ -209,6 +201,13 @@ async function useMessage(text, messageId = null) {
       delay = gaussianRandom(delayParams.baseMean, delayParams.baseStdDev);
     }
 
+    if (debugMode) {
+      console.log(
+        `%c⏱️ Delay: ${Math.round(delay)}ms`,
+        "color: #f97316; font-size: 10px;",
+      );
+    }
+
     await sleep(delay);
 
     // ======== 2b. PAUSAS LARGAS DESPUÉS DE PUNTUACIÓN ========
@@ -227,6 +226,12 @@ async function useMessage(text, messageId = null) {
 
   // Auto-envío si está habilitado
   if (window.appData.autoSend) {
+    if (debugMode) {
+      console.log(
+        "%c📤 Auto-envío activado - Enviando mensaje",
+        "color: #00a884; font-weight: bold;",
+      );
+    }
     await sleep(300); // Pequeña pausa para asegurar que el texto está listo
     const sendButton = findWhatsAppSendButton();
     if (sendButton) {
@@ -234,9 +239,16 @@ async function useMessage(text, messageId = null) {
     }
   }
 
+  if (debugMode) {
+    console.log(
+      "%c✅ [DEBUG] Escritura completada",
+      "background: #00a884; color: white; padding: 2px 6px; border-radius: 2px;",
+    );
+  }
+
   // Remover estado de escritura al finalizar
   if (messageElement) {
-    messageElement.classList.remove('waqm-message-writing');
+    messageElement.classList.remove("waqm-message-writing");
   }
 }
 

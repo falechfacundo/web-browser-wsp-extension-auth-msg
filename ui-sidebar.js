@@ -37,6 +37,13 @@ function createSidebar() {
           <span class="waqm-auto-send-text">Envío automático</span>
         </label>
       </div>
+      <!-- <div class="waqm-debug-control">
+        <label class="waqm-debug-label">
+          <input type="checkbox" id="waqm-debug-toggle" class="waqm-debug-toggle" ${window.appData.debugMode ? "checked" : ""}>
+          <span class="waqm-toggle-slider"></span>
+          <span class="waqm-debug-text">🐛 Modo Debug</span>
+        </label>
+      </div> -->
       <div class="waqm-folders-container" id="waqm-folders-container">
         <!-- Las carpetas se renderizan aquí -->
       </div>
@@ -97,6 +104,26 @@ function setupEventListeners() {
     autoSendToggle.addEventListener("change", (e) => {
       window.appData.autoSend = e.target.checked;
       window.saveData();
+    });
+  }
+
+  // Toggle de debug
+  const debugToggle = document.getElementById("waqm-debug-toggle");
+  if (debugToggle) {
+    debugToggle.addEventListener("change", (e) => {
+      window.appData.debugMode = e.target.checked;
+      window.saveData();
+      if (e.target.checked) {
+        console.log(
+          "%c🐛 DEBUG MODE ACTIVADO",
+          "background: #00a884; color: white; padding: 4px 8px; border-radius: 3px; font-weight: bold;",
+        );
+      } else {
+        console.log(
+          "%c🐛 DEBUG MODE DESACTIVADO",
+          "background: #ef4444; color: white; padding: 4px 8px; border-radius: 3px; font-weight: bold;",
+        );
+      }
     });
   }
 }

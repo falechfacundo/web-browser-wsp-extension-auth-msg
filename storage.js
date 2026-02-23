@@ -16,6 +16,9 @@ async function loadData() {
         if (window.appData.autoSend === undefined) {
           window.appData.autoSend = false;
         }
+        if (window.appData.debugMode === undefined) {
+          window.appData.debugMode = false;
+        }
         // Asegurar que cada carpeta tenga un color
         window.appData.folders.forEach((folder) => {
           if (!folder.color) {
@@ -27,6 +30,7 @@ async function loadData() {
         window.appData = {
           typingSpeed: "normal",
           autoSend: false,
+          debugMode: false,
           folders: [
             {
               id: generateId(),
