@@ -19,6 +19,9 @@ function createSidebar() {
       <button class="waqm-btn waqm-btn-mini waqm-toggle-btn" title="Minimizar/Expandir">−</button>
     </div>
     <div class="waqm-content">
+      <div class="waqm-search-bar">
+        <input type="text" id="waqm-search-input" class="waqm-search-input" placeholder="Buscar carpeta o mensaje..." autocomplete="off">
+      </div>
       <div class="waqm-speed-control">
         <label class="waqm-speed-label">Velocidad de tipeo:</label>
         <div class="waqm-speed-slider-container">
@@ -37,13 +40,6 @@ function createSidebar() {
           <span class="waqm-auto-send-text">Envío automático</span>
         </label>
       </div>
-      <!-- <div class="waqm-debug-control">
-        <label class="waqm-debug-label">
-          <input type="checkbox" id="waqm-debug-toggle" class="waqm-debug-toggle" ${window.appData.debugMode ? "checked" : ""}>
-          <span class="waqm-toggle-slider"></span>
-          <span class="waqm-debug-text">🐛 Modo Debug</span>
-        </label>
-      </div> -->
       <div class="waqm-folders-container" id="waqm-folders-container">
         <!-- Las carpetas se renderizan aquí -->
       </div>
@@ -72,6 +68,13 @@ function createSidebar() {
 // ==================== EVENT LISTENERS ====================
 
 function setupEventListeners() {
+    // Buscador rápido
+    const searchInput = document.getElementById("waqm-search-input");
+    if (searchInput) {
+      searchInput.addEventListener("input", (e) => {
+        window.renderFolders(e.target.value);
+      });
+    }
   // Botón añadir carpeta
   const addFolderBtn = document.getElementById("waqm-add-folder-btn");
   if (addFolderBtn) {

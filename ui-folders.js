@@ -3,15 +3,32 @@
 
 // ==================== RENDERIZADO ====================
 
-function renderFolders() {
+function renderFolders(searchTerm = "") {
   const container = document.getElementById("waqm-folders-container");
   if (!container) return;
 
   container.innerHTML = "";
+  // Función para normalizar acentos y minúsculas
+  function normalize(str) {
+    return str.normalize("NFD").replace(/\p{Diacritic}/gu, "").toLowerCase();
+  }
+
+  const normalizedSearch = normalize(searchTerm.trim());
 
   window.appData.folders.forEach((folder) => {
-    const folderEl = createFolderElement(folder);
-    container.appendChild(folderEl);
+    // Filtrar por nombre de carpeta o mensajes (insensible a acentos)
+    const folderNameMatch = normalize(folder.name).includes(normalizedSearch);
+    const filteredMessages = folder.messages.filter((msg) =>
+      normalize(msg.name).includes(normalizedSearch) ||
+      normalize(msg.text).includes(normalizedSearch)
+    );
+    if (normalizedSearch === "" || folderNameMatch || filteredMessages.length > 0) {
+      // Clonar carpeta y filtrar mensajes si hay búsqueda
+      const folderClone = { ...folder };
+      folderClone.messages = normalizedSearch === "" ? folder.messages : filteredMessages;
+      const folderEl = createFolderElement(folderClone);
+      container.appendChild(folderEl);
+    }
   });
 }
 
@@ -45,6 +62,7 @@ function createFolderElement(folder) {
   const folderActions = document.createElement("div");
   folderActions.className = "waqm-folder-actions";
   folderActions.innerHTML = `
+    <button class="waqm-btn-icon" title="Nuevo mensaje" data-action="add-message">➕</button>
     <button class="waqm-btn-icon" title="Editar carpeta" data-action="edit-folder">✏️</button>
     <button class="waqm-btn-icon" title="Eliminar carpeta" data-action="delete-folder">🗑️</button>
   `;
@@ -62,17 +80,16 @@ function createFolderElement(folder) {
     messagesContainer.appendChild(messageEl);
   });
 
-  // Botón añadir mensaje
-  const addMessageBtn = document.createElement("button");
-  addMessageBtn.className = "waqm-btn waqm-btn-secondary waqm-add-message-btn";
-  addMessageBtn.textContent = "Nuevo Mensaje";
-  addMessageBtn.addEventListener("click", () => addMessage(folder.id));
-  messagesContainer.appendChild(addMessageBtn);
-
   folderDiv.appendChild(folderHeader);
   folderDiv.appendChild(messagesContainer);
 
   // Event listeners para acciones de carpeta
+  folderActions
+    .querySelector('[data-action="add-message"]')
+    .addEventListener("click", (e) => {
+      e.stopPropagation();
+      addMessage(folder.id);
+    });
   folderActions
     .querySelector('[data-action="edit-folder"]')
     .addEventListener("click", (e) => {

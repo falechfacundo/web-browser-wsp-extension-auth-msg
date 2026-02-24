@@ -1,3 +1,22 @@
+/* ==================== SEARCH BAR ==================== */
+.waqm-search-bar {
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+}
+.waqm-search-input {
+  width: 100%;
+  padding: 8px 12px;
+  border-radius: 6px;
+  border: 1px solid #d1d7db;
+  font-size: 14px;
+  outline: none;
+  transition: border 0.2s;
+}
+.waqm-search-input:focus {
+  border: 1.5px solid #00a884;
+  background: #f0fdf6;
+}
 /* WhatsApp Web - Mensajes Rápidos - Estilos */
 
 /* ==================== SIDEBAR PRINCIPAL ==================== */

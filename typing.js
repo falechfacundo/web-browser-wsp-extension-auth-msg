@@ -3,6 +3,68 @@
 
 // ==================== ESCRITURA EN WHATSAPP ====================
 
+// Insertar salto de línea simulando Shift+Enter humano
+async function insertLineBreakHuman(inputBox, debugMode) {
+  if (debugMode) {
+    console.log(
+      "%c⏎ Insertando salto de línea (Shift+Enter)",
+      "color: #00a884; font-weight: bold;",
+    );
+  }
+
+  // 1. Disparar Shift+Enter DOWN
+  inputBox.dispatchEvent(
+    new KeyboardEvent("keydown", {
+      key: "Enter",
+      code: "Enter",
+      keyCode: 13,
+      which: 13,
+      shiftKey: true, // CRÍTICO: Shift+Enter no envía mensaje
+      bubbles: true,
+      cancelable: true,
+      composed: true,
+    }),
+  );
+
+  // 2. Insertar <br> manualmente usando Selection API
+  const sel = window.getSelection();
+  if (sel.rangeCount > 0) {
+    const range = sel.getRangeAt(0);
+    const br = document.createElement("br");
+
+    range.deleteContents();
+    range.insertNode(br);
+    range.setStartAfter(br);
+    range.collapse(true);
+    sel.removeAllRanges();
+    sel.addRange(range);
+  }
+
+  // 3. Disparar Input event (para que WhatsApp detecte cambio)
+  inputBox.dispatchEvent(
+    new InputEvent("input", {
+      bubbles: true,
+      cancelable: true,
+      inputType: "insertLineBreak",
+      composed: true,
+    }),
+  );
+
+  // 4. Disparar Shift+Enter UP
+  inputBox.dispatchEvent(
+    new KeyboardEvent("keyup", {
+      key: "Enter",
+      code: "Enter",
+      keyCode: 13,
+      which: 13,
+      shiftKey: true, // CRÍTICO: Shift+Enter no envía mensaje
+      bubbles: true,
+      cancelable: true,
+      composed: true,
+    }),
+  );
+}
+
 // Función para generar delays con distribución gaussiana (Box-Muller transform)
 // Esto simula mejor los tiempos de escritura humanos, donde la mayoría de delays
 // están cerca del promedio con picos ocasionales
@@ -105,15 +167,21 @@ async function useMessage(text, messageId = null) {
   for (let i = 0; i < text.length; i++) {
     let char = text[i];
 
-    // Convertir saltos de línea a espacios
+    // Manejar saltos de línea con Shift+Enter
     if (char === "\n") {
-      char = " ";
+      await insertLineBreakHuman(inputBox, debugMode);
+
+      // Delay especial después de salto de línea (simula pensamiento)
+      const lineBreakDelay = gaussianRandom(200, 50);
       if (debugMode) {
         console.log(
-          `%c⏎ [${i}] SALTO DE LÍNEA → ESPACIO`,
-          "color: #00a884; font-weight: bold;",
+          `%c⏱️ Delay post-salto: ${Math.round(lineBreakDelay)}ms`,
+          "color: #f97316; font-size: 10px;",
         );
       }
+      await sleep(lineBreakDelay);
+
+      continue; // Saltar al siguiente carácter
     }
 
     const keyCode = char.charCodeAt(0);
@@ -304,6 +372,7 @@ function sleep(ms) {
 }
 
 // Exportar funciones
+window.insertLineBreakHuman = insertLineBreakHuman;
 window.gaussianRandom = gaussianRandom;
 window.getTypingDelayParams = getTypingDelayParams;
 window.useMessage = useMessage;
