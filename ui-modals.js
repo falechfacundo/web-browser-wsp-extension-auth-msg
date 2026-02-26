@@ -107,6 +107,18 @@ window.showMessageModal = function ({
     seqAddBtn.onclick = () => {
       steps.push({ id: window.generateId(), text: "" });
       renderList();
+      
+      // Hacer scroll y focus en el nuevo mensaje agregado
+      setTimeout(() => {
+        const lastRow = seqListDiv.lastElementChild;
+        if (lastRow) {
+          lastRow.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          const textarea = lastRow.querySelector('.waqm-sequence-edit-text');
+          if (textarea) {
+            textarea.focus();
+          }
+        }
+      }, 100);
     };
 
     // Guardar
