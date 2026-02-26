@@ -58,17 +58,6 @@ window.showMessageModal = function ({
 
     let steps = sequenceValue.map((msg) => ({ ...msg }));
 
-    // Toggle UI
-    sequenceToggle.onchange = () => {
-      if (sequenceToggle.checked) {
-        singleField.style.display = "none";
-        sequenceField.style.display = "block";
-      } else {
-        singleField.style.display = "block";
-        sequenceField.style.display = "none";
-      }
-    };
-
     // Render lista de pasos
     function renderList() {
       seqListDiv.innerHTML = "";
@@ -104,6 +93,44 @@ window.showMessageModal = function ({
       });
     }
     renderList();
+    
+    // Toggle UI
+    sequenceToggle.onchange = () => {
+      if (sequenceToggle.checked) {
+        // Convertir mensaje simple a secuencia
+        const currentText = textInput.value.trim();
+        
+        // Si hay texto en el textarea y la secuencia está vacía, convertirlo
+        if (currentText && steps.length === 0) {
+          // Dividir por saltos de línea
+          const lines = currentText.split('\n').filter(line => line.trim() !== '');
+          
+          if (lines.length > 0) {
+            // Crear un mensaje de secuencia por cada línea
+            steps = lines.map(line => ({
+              id: window.generateId(),
+              text: line.trim()
+            }));
+          } else {
+            // Si no hay líneas válidas, crear un mensaje con el texto completo
+            steps = [{
+              id: window.generateId(),
+              text: currentText
+            }];
+          }
+          
+          // Renderizar la lista actualizada
+          renderList();
+        }
+        
+        singleField.style.display = "none";
+        sequenceField.style.display = "block";
+      } else {
+        singleField.style.display = "block";
+        sequenceField.style.display = "none";
+      }
+    };
+    
     seqAddBtn.onclick = () => {
       steps.push({ id: window.generateId(), text: "" });
       renderList();

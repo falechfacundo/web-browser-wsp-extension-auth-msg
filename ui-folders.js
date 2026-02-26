@@ -352,15 +352,27 @@ async function addMessage(folderId) {
     title: "Nuevo Mensaje",
     nameValue: "",
     textValue: "",
+    sequenceValue: [],
+    isSequence: false,
   });
 
   if (!result) return;
 
-  const newMessage = {
-    id: window.generateId(),
-    name: result.name,
-    text: result.text,
-  };
+  let newMessage;
+  if (result.isSequence) {
+    newMessage = {
+      id: window.generateId(),
+      type: "sequence",
+      name: result.name,
+      sequence: result.sequence,
+    };
+  } else {
+    newMessage = {
+      id: window.generateId(),
+      name: result.name,
+      text: result.text,
+    };
+  }
 
   folder.messages.push(newMessage);
   window.saveData();
@@ -374,16 +386,32 @@ async function editMessage(folderId, messageId) {
   const message = folder.messages.find((m) => m.id === messageId);
   if (!message) return;
 
+  const isSequence = message.type === "sequence";
   const result = await window.showMessageModal({
     title: "Editar Mensaje",
     nameValue: message.name,
-    textValue: message.text,
+    textValue: message.text || "",
+    sequenceValue: message.sequence || [],
+    isSequence: isSequence,
   });
 
   if (!result) return;
 
-  message.name = result.name;
-  message.text = result.text;
+  // Actualizar el mensaje preservando el ID
+  if (result.isSequence) {
+    message.type = "sequence";
+    message.name = result.name;
+    message.sequence = result.sequence;
+    // Eliminar campo text si existe (conversión de mensaje simple a secuencia)
+    delete message.text;
+  } else {
+    message.name = result.name;
+    message.text = result.text;
+    // Eliminar campos de secuencia si existen (conversión de secuencia a mensaje simple)
+    delete message.type;
+    delete message.sequence;
+  }
+  
   window.saveData();
   renderFolders();
 }
