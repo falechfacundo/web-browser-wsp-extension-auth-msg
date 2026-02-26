@@ -6,9 +6,10 @@
 2. [Arquitectura del Sistema](#arquitectura-del-sistema)
 3. [Flujo de Ejecución](#flujo-de-ejecución)
 4. [Simulación de Comportamiento Humano](#simulación-de-comportamiento-humano)
-5. [Eventos DOM de WhatsApp Web](#eventos-dom-de-whatsapp-web)
-6. [Problema Actual: Saltos de Línea](#problema-actual-saltos-de-línea)
-7. [Enfoques Propuestos](#enfoques-propuestos)
+5. [Secuencias de Mensajes](#secuencias-de-mensajes)
+6. [Sistema de Cancelación](#sistema-de-cancelación)
+7. [Eventos DOM de WhatsApp Web](#eventos-dom-de-whatsapp-web)
+8. [Saltos de Línea](#saltos-de-línea)
 
 ---
 
@@ -24,9 +25,12 @@ El sistema de tipeo (`typing.js`) simula escritura humana realista en WhatsApp W
 - ✅ Pausas variables después de puntuación
 - ✅ Picos ocasionales simulando titubeos
 - ✅ Cadena completa de eventos DOM (keydown, keypress, input, keyup)
+- ✅ **Secuencias de mensajes** consecutivos con delays naturales
+- ✅ **Sistema de cancelación** en tiempo real
+- ✅ **Animaciones visuales** durante escritura
 - ✅ Auto-envío opcional
 - ✅ Modo debug con logs detallados
-- ⚠️ **PROBLEMA:** Saltos de línea (actualmente convertidos a espacios)
+- ✅ **Saltos de línea con Shift+Enter** correctos
 
 ---
 
@@ -34,7 +38,72 @@ El sistema de tipeo (`typing.js`) simula escritura humana realista en WhatsApp W
 
 ### Funciones Principales
 
-#### 1. `gaussianRandom(mean, stdDev)`
+#### 1. `useMessage(text, messageId)` - **Core Function**
+
+**Propósito:** Escribir un mensaje completo simulando tipeo humano.
+
+**Parámetros:**
+- `text` - String a escribir (soporta `\n` para multilinea)
+- `messageId` - ID del mensaje para animación visual (opcional)
+
+**Flujo:**
+1. Setear flags: `window.isTyping = true`, `cancelTyping = false`
+2. Mostrar botón de cancelar
+3. Marcar mensaje con clase `waqm-message-writing`
+4. Encontrar input box de WhatsApp
+5. Escribir carácter por carácter con delays
+6. Chequear `cancelTyping` en cada iteración
+7. Auto-enviar si configurado
+8. Limpiar animaciones y ocultar botón de cancelar
+
+**Manejo de cancelación:**
+```javascript
+for (let i = 0; i < text.length; i++) {
+  if (window.cancelTyping) {
+    inputBox.textContent = "";
+    messageElement.classList.remove("waqm-message-writing");
+    window.isTyping = false;
+    if (cancelBtn) cancelBtn.style.display = "none";
+    return; // Salir inmediatamente
+  }
+  // ...escribir carácter
+}
+```
+
+#### 2. `useMessageSequence(sequence, sequenceId)` - **Secuencias**
+
+**Propósito:** Ejecutar múltiples mensajes consecutivos con delays naturales.
+
+**Parámetros:**
+- `sequence` - Array de objetos `{id, text}`
+- `sequenceId` - ID de la secuencia para animación (opcional)
+
+**Flujo:**
+1. Marcar **elemento de secuencia completo** con `waqm-message-writing`
+2. Iterar sobre cada sub-mensaje
+3. Para cada sub-mensaje:
+   - Chequear `cancelTyping`
+   - Llamar `useMessage(subMsg.text, subMsg.id)`
+   - Delay gaussiano entre mensajes (6x más largo que entre caracteres)
+4. Remover animación de secuencia al finalizar
+
+**Delays entre mensajes:**
+```javascript
+const delay = gaussianRandom(
+  delayParams.baseMean * 6,    // 6x el delay base
+  delayParams.baseStdDev * 2   // Mayor variación
+);
+// Velocidad Normal: ~720ms ± 50ms entre mensajes
+// Velocidad Slow: ~1350ms ± 100ms
+// Velocidad Fast: ~390ms ± 30ms
+```
+
+**¿Por qué 6x?** Simula el tiempo humano de:
+- Pensar qué escribir siguiente
+- Revisar mensaje anterior
+- Decidir presionar Enter
+
+#### 3. `gaussianRandom(mean, stdDev)`
 
 **Propósito:** Generar delays realistas usando distribución normal.
 
@@ -51,7 +120,13 @@ delay = max(0, z0 * stdDev + mean)
 - Variación natural (desviación estándar)
 - Outliers ocasionales (picos de lentitud)
 
-#### 2. `getTypingDelayParams()`
+**Ejemplo con μ=120ms, σ=25ms:**
+```
+Delays generados:
+115ms, 132ms, 98ms, 145ms, 121ms, 108ms, 134ms, 119ms...
+```
+
+#### 4. `getTypingDelayParams()`
 
 **Propósito:** Definir parámetros de velocidad según configuración del usuario.
 
@@ -61,43 +136,219 @@ delay = max(0, z0 * stdDev + mean)
 | Normal    | 120ms     | 25ms    | 300ms    | 9%          |
 | Fast      | 65ms      | 15ms    | 150ms    | 8%          |
 
-#### 3. `useMessage(text, messageId)`
+**Uso:**
+```javascript
+const params = getTypingDelayParams();
+// params.baseMean, params.baseStdDev, params.peakMax, params.peakChance
+```
 
-**Propósito:** Función principal que orquesta todo el proceso de escritura.
+#### 5. `insertLineBreakHuman(inputBox, debugMode)`
 
-**Parámetros:**
+**Propósito:** Insertar salto de línea simulando Shift+Enter humano.
 
-- `text`: String a escribir (puede contener `\n`)
-- `messageId`: ID del mensaje para indicador visual (opcional)
+**Flujo:**
+1. Disparar evento `keydown` con `shiftKey: true`
+2. Insertar `<br>` usando Selection API
+3. Disparar evento `input` tipo "insertLineBreak"
+4. Disparar evento `keyup` con `shiftKey: true`
 
-**Fases:**
+**Crítico:** `shiftKey: true` previene que WhatsApp envíe el mensaje (Enter solo enviaría).
 
-1. Marcar mensaje como "escribiendo" en UI
-2. Encontrar input box de WhatsApp
-3. Limpiar contenido previo
-4. Iterar carácter por carácter
-5. Auto-enviar si está configurado
-6. Remover indicador visual
+#### 6. Funciones Helper
+
+- `findWhatsAppInputBox()` - Localiza campo de entrada con selectores múltiples
+- `findWhatsAppSendButton()` - Localiza botón enviar (maneja ícono SVG)
+- `sleep(ms)` - Helper asíncrono para delays
 
 ---
 
-## Flujo de Ejecución
+## Secuencias de Mensajes
 
-### Diagrama de Flujo
+### Caso de Uso
+
+Enviar múltiples mensajes consecutivos automáticamente:
+
+```javascript
+const secuencia = [
+  { id: "1", text: "Hola! 👋" },
+  { id: "2", text: "Bienvenido a nuestro servicio" },
+  { id: "3", text: "¿En qué te puedo ayudar?" }
+];
+
+await useMessageSequence(secuencia, "seq-123");
+```
+
+**Resultado:**
+1. Escribe "Hola! 👋" car por car
+2. Delay ~720ms (velocidad normal)
+3. Escribe "Bienvenido a nuestro servicio"
+4. Delay ~720ms
+5. Escribe "¿En qué te puedo ayudar?"
+
+### Animación Visual
+
+Durante toda la secuencia, el **elemento completo** tiene animación:
+
+```css
+.waqm-sequence.waqm-message-writing {
+  animation: pulse-writing 1.5s ease-in-out infinite;
+  border-left: 3px solid #00a884;
+  background: rgba(0, 168, 132, 0.05);
+}
+
+.waqm-sequence.waqm-message-writing::before {
+  content: "✍️";
+  animation: bounce-writing 0.6s ease-in-out infinite;
+}
+```
+
+Ver [SECUENCIAS.md](SECUENCIAS.md) para documentación completa.
+
+---
+
+## Sistema de Cancelación
+
+### Variables Globales
+
+```javascript
+window.cancelTyping = false; // Flag para cancelar
+window.isTyping = false;     // Flag indicando si está escribiendo
+```
+
+### Flujo de Cancelación
 
 ```
-┌─────────────────────────────────────┐
-│  useMessage(text, messageId)        │
-└──────────────┬──────────────────────┘
-               │
-               ▼
-┌─────────────────────────────────────┐
-│  1. Marcar UI como "escribiendo"    │
-└──────────────┬──────────────────────┘
-               │
-               ▼
-┌─────────────────────────────────────┐
-│  2. findWhatsAppInputBox()          │
+Usuario hace clic en botón rojo
+         ↓
+window.cancelTyping = true
+         ↓
+useMessage() chequea en cada carácter
+         ↓
+Si cancelTyping === true:
+  - Limpiar inputBox
+  - Remover animaciones
+  - Ocultar botón cancelar
+  - Salir con return
+```
+
+### Botón de Cancelar
+
+**Ubicación:** Esquina inferior derecha, fixed position
+
+```css
+.waqm-cancel-typing-btn {
+  position: fixed;
+  bottom: 80px;
+  right: 340px;
+  background: linear-gradient(135deg, #ff4444, #cc0000);
+  color: white;
+  animation: pulse-cancel 1.5s ease-in-out infinite;
+  display: none; /* Oculto por default */
+}
+```
+
+**Visibilidad:**
+- Se muestra cuando `useMessage()` inicia
+- Se oculta cuando termina o se cancela
+- Click setea `window.cancelTyping = true`
+
+### Chequeo en Múltiples Puntos
+
+**En `useMessage()`:**
+```javascript
+// Dentro del loop de caracteres
+for (let i = 0; i < text.length; i++) {
+  if (window.cancelTyping) {
+    // Limpiar y salir
+    inputBox.textContent = "";
+    if (messageElement) {
+      messageElement.classList.remove("waqm-message-writing");
+    }
+    window.isTyping = false;
+    if (cancelBtn) cancelBtn.style.display = "none";
+    return;
+  }
+  // Continuar escribiendo...
+}
+```
+
+**En `useMessageSequence()`:**
+```javascript
+for (let i = 0; i < sequence.length; i++) {
+  // Chequeo 1: Antes de cada mensaje
+  if (window.cancelTyping) break;
+  
+  await useMessage(sequence[i].text, sequence[i].id);
+  
+  // Chequeo 2: Antes del delay
+  if (i < sequence.length - 1 && !window.cancelTyping) {
+    await sleep(delay);
+  }
+}
+```
+
+**Resultado:** Cancelación inmediata en cualquier punto.
+
+---
+
+## Saltos de Línea
+
+### Problema Original
+
+WhatsApp Web usa `contenteditable` con `<div>` y `<br>` para saltos de línea.
+
+**Comportamiento requerido:**
+- Enter solo → Envía mensaje
+- Shift+Enter → Salto de línea
+
+### Solución Implementada
+
+**Función:** `insertLineBreakHuman(inputBox, debugMode)`
+
+**Eventos disparados:**
+1. `KeyboardEvent("keydown")` con `shiftKey: true`
+2. Insertar `<br>` con Selection API
+3. `InputEvent("input")` con `inputType: "insertLineBreak"`
+4. `KeyboardEvent("keyup")` con `shiftKey: true`
+
+**Código:**
+```javascript
+// 1. Shift+Enter DOWN
+inputBox.dispatchEvent(new KeyboardEvent("keydown", {
+  key: "Enter",
+  shiftKey: true, // ← CRÍTICO
+  bubbles: true,
+  cancelable: true,
+}));
+
+// 2. Insertar <br> manualmente
+const sel = window.getSelection();
+if (sel.rangeCount > 0) {
+  const range = sel.getRangeAt(0);
+  const br = document.createElement("br");
+  range.insertNode(br);
+  range.setStartAfter(br);
+  sel.removeAllRanges();
+  sel.addRange(range);
+}
+
+// 3. Input event
+inputBox.dispatchEvent(new InputEvent("input", {
+  inputType: "insertLineBreak",
+  bubbles: true,
+}));
+
+// 4. Shift+Enter UP
+inputBox.dispatchEvent(new KeyboardEvent("keyup", {
+  key: "Enter",
+  shiftKey: true,
+  bubbles: true,
+}));
+```
+
+**Resultado:** Saltos de línea nativos en WhatsApp Web sin enviar mensaje.
+
+---
 │     ├─ Buscar con selectores        │
 │     └─ Si no existe → Alert + Exit  │
 └──────────────┬──────────────────────┘

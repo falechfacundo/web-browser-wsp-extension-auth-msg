@@ -1,5 +1,48 @@
+// Usar una secuencia de mensajes (enviar uno tras otro)
+window.useMessageSequence = async function (sequence, sequenceId = null) {
+  // Marcar la secuencia completa como escribiendo
+  let sequenceElement = null;
+  if (sequenceId) {
+    sequenceElement = document.querySelector(
+      `[data-sequence-id="${sequenceId}"]`,
+    );
+    if (sequenceElement) {
+      sequenceElement.classList.add("waqm-message-writing");
+    }
+  }
+
+  const delayParams = window.getTypingDelayParams
+    ? window.getTypingDelayParams()
+    : { baseMean: 120, baseStdDev: 25 };
+  for (let i = 0; i < sequence.length; i++) {
+    // Chequear si se canceló
+    if (window.cancelTyping) {
+      break;
+    }
+    await window.useMessage(sequence[i].text, sequence[i].id);
+    if (i < sequence.length - 1 && !window.cancelTyping) {
+      // Delay gaussiano natural entre mensajes
+      const delay = window.gaussianRandom
+        ? window.gaussianRandom(
+            delayParams.baseMean * 6,
+            delayParams.baseStdDev * 2,
+          )
+        : 800;
+      await window.sleep(delay);
+    }
+  }
+
+  // Remover animación de la secuencia completa
+  if (sequenceElement) {
+    sequenceElement.classList.remove("waqm-message-writing");
+  }
+};
 // WhatsApp Web - Mensajes Rápidos
 // typing.js - Simulación de escritura humana en WhatsApp
+
+// ==================== CONTROL DE CANCELACIÓN ====================
+window.cancelTyping = false;
+window.isTyping = false;
 
 // ==================== ESCRITURA EN WHATSAPP ====================
 
@@ -112,10 +155,23 @@ function getTypingDelayParams() {
 
 // Función principal para usar un mensaje con tipeo anti-detección de bot
 async function useMessage(text, messageId = null) {
+  // Marcar que se está escribiendo
+  window.isTyping = true;
+  window.cancelTyping = false;
+
+  // Mostrar botón de cancelar
+  const cancelBtn = document.getElementById("waqm-cancel-typing-btn");
+  if (cancelBtn) cancelBtn.style.display = "flex";
+
   // Marcar el mensaje como "escribiendo" en la UI
   let messageElement = null;
   if (messageId) {
     messageElement = document.querySelector(`[data-message-id="${messageId}"]`);
+    if (!messageElement) {
+      messageElement = document.querySelector(
+        `[data-sequence-id="${messageId}"]`,
+      );
+    }
     if (messageElement) {
       messageElement.classList.add("waqm-message-writing");
     }
@@ -145,6 +201,9 @@ async function useMessage(text, messageId = null) {
     if (messageElement) {
       messageElement.classList.remove("waqm-message-writing");
     }
+    window.isTyping = false;
+
+    if (cancelBtn) cancelBtn.style.display = "none";
     alert(
       "No se encontró el campo de texto de WhatsApp. Asegúrate de tener una conversación abierta.",
     );
@@ -165,6 +224,24 @@ async function useMessage(text, messageId = null) {
 
   // Escribir carácter por carácter simulando escritura humana realista
   for (let i = 0; i < text.length; i++) {
+    // Chequear si se canceló
+    if (window.cancelTyping) {
+      if (debugMode) {
+        console.log(
+          "%c❌ [DEBUG] Escritura cancelada por el usuario",
+          "background: #ef4444; color: white; padding: 2px 6px; border-radius: 2px;",
+        );
+      }
+      // Limpiar el campo
+      inputBox.textContent = "";
+      if (messageElement) {
+        messageElement.classList.remove("waqm-message-writing");
+      }
+      window.isTyping = false;
+      if (cancelBtn) cancelBtn.style.display = "none";
+      return;
+    }
+
     let char = text[i];
 
     // Manejar saltos de línea con Shift+Enter
@@ -318,6 +395,9 @@ async function useMessage(text, messageId = null) {
   if (messageElement) {
     messageElement.classList.remove("waqm-message-writing");
   }
+
+  window.isTyping = false;
+  if (cancelBtn) cancelBtn.style.display = "none";
 }
 
 // Encontrar el botón de enviar de WhatsApp Web

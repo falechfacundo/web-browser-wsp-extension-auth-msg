@@ -31,48 +31,72 @@ Los archivos se cargan en este orden específico (definido en `manifest.json`):
 
 ### storage.js (3 funciones)
 
-- `loadData()` - Carga datos desde chrome.storage.local
+- `loadData()` - Carga datos desde chrome.storage.local con migración de datos legacy
 - `saveData()` - Persiste datos en chrome.storage.local
-- `generateId()` - Genera IDs únicos
+- `generateId()` - Genera IDs únicos timestamp-based
 
-### typing.js (6 funciones)
+### typing.js (8 funciones)
 
-- `gaussianRandom()` - Distribución gaussiana para delays
-- `getTypingDelayParams()` - Parámetros según velocidad
-- `useMessage()` - **Core**: Escribe mensaje simulando humano
-- `findWhatsAppInputBox()` - Localiza campo de entrada
-- `findWhatsAppSendButton()` - Localiza botón enviar
-- `sleep()` - Helper de delays
+- `gaussianRandom()` - Distribución gaussiana para delays (Box-Muller transform)
+- `getTypingDelayParams()` - Parámetros según velocidad (slow/normal/fast)
+- `useMessage()` - **Core**: Escribe mensaje car por car simulando humano
+- `useMessageSequence()` - Ejecuta secuencia de múltiples mensajes con delays
+- `findWhatsAppInputBox()` - Localiza campo de entrada de WhatsApp
+- `findWhatsAppSendButton()` - Localiza botón enviar de WhatsApp
+- `insertLineBreakHuman()` - Inserta saltos de línea con Shift+Enter
+- `sleep()` - Helper de delays asíncronos
+
+**Variables globales:**
+- `window.cancelTyping` - Flag para cancelar escritura en progreso
+- `window.isTyping` - Flag indicando si está escribiendo actualmente
 
 ### ui-modals.js (3 funciones)
 
-- `showMessageModal()` - Modal crear/editar mensajes
-- `showFolderModal()` - Modal crear/editar carpetas + colores
-- `escapeHtml()` - Sanitización XSS
+- `showMessageModal()` - **Modal unificado** con toggle para mensajes simples o secuencias
+- `showFolderModal()` - Modal crear/editar carpetas con selector de colores
+- `escapeHtml()` - Sanitización XSS para prevenir inyección
 
-### ui-folders.js (10 funciones)
+### ui-folders.js (14 funciones)
 
-- `renderFolders()` - Renderiza todas las carpetas
-- `createFolderElement()` - Crea elemento DOM de carpeta
-- `createMessageElement()` - Crea elemento DOM de mensaje
-- `toggleFolder()` - Toggle colapsar/expandir
-- `addFolder()` - Crea nueva carpeta
-- `editFolder()` - Edita carpeta existente
-- `deleteFolder()` - Elimina carpeta
-- `addMessage()` - Crea nuevo mensaje
+- `renderFolders(searchTerm)` - Renderiza carpetas con filtro de búsqueda
+- `createFolderElement()` - Crea elemento DOM de carpeta con color personalizado
+- `createMessageElement()` - Crea elemento DOM de mensaje normal
+- `createSequenceElement()` - Crea elemento DOM de secuencia de mensajes
+- `toggleFolder()` - Toggle colapsar/expandir carpeta
+- `addFolder()` - Crea nueva carpeta con modal
+- `editFolder()` - Edita carpeta existente (nombre y color)
+- `deleteFolder()` - Elimina carpeta con confirmación
+- `addMessageOrSequence()` - Crea nuevo mensaje o secuencia (modal unificado)
 - `editMessage()` - Edita mensaje existente
-- `deleteMessage()` - Elimina mensaje
+- `deleteMessage()` - Elimina mensaje con confirmación
+- `editSequence()` - Edita secuencia existente con sub-mensajes
+- `deleteSequence()` - Elimina secuencia con confirmación
+- `normalize()` - Normaliza strings (remover acentos, lowercase) para búsqueda
 
-### ui-sidebar.js (4 funciones)
+### ui-sidebar.js (5 funciones)
 
-- `createSidebar()` - Crea HTML de barra lateral
-- `setupEventListeners()` - Configura listeners
+- `createSidebar()` - Crea HTML completo de barra lateral con controles
+- `setupEventListeners()` - Configura todos los listeners (búsqueda, export/import, controles)
 - `toggleSidebar()` - Minimizar/expandir sidebar
-- `expandSidebar()` - Expande desde minimizado
+- `expandSidebar()` - Expande desde estado minimizado
+- **Botón de cancelar** - Se crea en sidebar y se muestra/oculta durante tipeo
 
-### init.js (Entry Point)
+**Elementos UI:**
+- Barra de búsqueda con filtrado en tiempo real
+- Botones exportar/importar (📤📥)
+- Control de velocidad (slider: Lento/Normal/Rápido)
+- Toggle de envío automático
+- Botón de cancelar tipeo (aparece durante escritura)
 
-- Define `FOLDER_COLORS` y `appData` globales
+### init.js (Entry Point + Export/Import)
+
+**Configuración global:**
+- `FOLDER_COLORS` - Array de 8 colores predefinidos con valores y variantes
+- `appData` - Estado global de la aplicación
+
+**Funciones:**
+- `exportFoldersAndMessages()` - Exporta datos a JSON incluyendo secuencias
+- `importFoldersAndMessages()` - Importa y valida datos JSON con normalización
 - `init()` - Función principal de inicialización
 - `waitForWhatsAppToLoad()` - Espera carga de WhatsApp Web
 

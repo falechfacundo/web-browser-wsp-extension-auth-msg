@@ -1,115 +1,147 @@
 // WhatsApp Web - Mensajes Rápidos
 // ui-modals.js - Modales para crear/editar mensajes y carpetas
 
-// ==================== MODAL PERSONALIZADO ====================
-
-function showMessageModal({ title, nameValue, textValue }) {
+// ==================== MODAL UNIFICADO MENSAJE/SECUENCIA ====================
+window.showMessageModal = function ({
+  title,
+  nameValue = "",
+  textValue = "",
+  sequenceValue = [],
+  isSequence = false,
+}) {
   return new Promise((resolve) => {
-    // Crear overlay
     const overlay = document.createElement("div");
     overlay.className = "waqm-modal-overlay";
-
-    // Crear modal
     const modal = document.createElement("div");
     modal.className = "waqm-modal";
-
     modal.innerHTML = `
       <div class="waqm-modal-header">
         <h3 class="waqm-modal-title">${escapeHtml(title)}</h3>
+        <label class="waqm-modal-toggle">
+          <input type="checkbox" id="waqm-modal-sequence-toggle" ${isSequence ? "checked" : ""} />
+          <span>Secuencia de mensajes</span>
+        </label>
       </div>
       <div class="waqm-modal-body">
-        <div class="waqm-modal-field">
+        <div class="waqm-modal-field waqm-modal-single" style="display:${isSequence ? "none" : "block"}">
           <label class="waqm-modal-label">Nombre del mensaje</label>
           <input type="text" class="waqm-modal-input" id="waqm-modal-name" value="${escapeHtml(nameValue)}" placeholder='Ej: "Saludo formal"' />
-        </div>
-        <div class="waqm-modal-field">
           <label class="waqm-modal-label">Texto del mensaje</label>
           <textarea class="waqm-modal-textarea" id="waqm-modal-text" placeholder="Escribe tu mensaje aquí...\nPuedes usar múltiples líneas">${escapeHtml(textValue)}</textarea>
         </div>
+        <div class="waqm-modal-field waqm-modal-sequence" style="display:${isSequence ? "block" : "none"}">
+          <label class="waqm-modal-label">Nombre de la secuencia</label>
+          <input type="text" class="waqm-modal-input" id="waqm-modal-sequence-name" value="${escapeHtml(nameValue)}" placeholder='Ej: "Secuencia bienvenida"' />
+          <div class="waqm-sequence-edit-list"></div>
+        </div>
       </div>
       <div class="waqm-modal-footer">
+        <button class="waqm-modal-btn waqm-modal-btn-secondary" id="waqm-sequence-add" style="margin-right: auto;">Agregar mensaje</button>
         <button class="waqm-modal-btn waqm-modal-btn-secondary" id="waqm-modal-cancel">Cancelar</button>
         <button class="waqm-modal-btn waqm-modal-btn-primary" id="waqm-modal-save">Guardar</button>
       </div>
     `;
-
     overlay.appendChild(modal);
     document.body.appendChild(overlay);
 
-    // Referencias a elementos
+    // Referencias
+    const sequenceToggle = modal.querySelector("#waqm-modal-sequence-toggle");
+    const singleField = modal.querySelector(".waqm-modal-single");
+    const sequenceField = modal.querySelector(".waqm-modal-sequence");
     const nameInput = modal.querySelector("#waqm-modal-name");
     const textInput = modal.querySelector("#waqm-modal-text");
+    const seqNameInput = modal.querySelector("#waqm-modal-sequence-name");
+    const seqListDiv = modal.querySelector(".waqm-sequence-edit-list");
+    const seqAddBtn = modal.querySelector("#waqm-sequence-add");
     const cancelBtn = modal.querySelector("#waqm-modal-cancel");
     const saveBtn = modal.querySelector("#waqm-modal-save");
 
-    // Focus en el campo de nombre
-    setTimeout(() => nameInput.focus(), 100);
+    let steps = sequenceValue.map((msg) => ({ ...msg }));
 
-    // Función para cerrar modal
-    const closeModal = () => {
-      overlay.remove();
+    // Toggle UI
+    sequenceToggle.onchange = () => {
+      if (sequenceToggle.checked) {
+        singleField.style.display = "none";
+        sequenceField.style.display = "block";
+      } else {
+        singleField.style.display = "block";
+        sequenceField.style.display = "none";
+      }
     };
 
-    // Event listeners
-    cancelBtn.addEventListener("click", () => {
-      closeModal();
+    // Render lista de pasos
+    function renderList() {
+      seqListDiv.innerHTML = "";
+      steps.forEach((msg, idx) => {
+        const row = document.createElement("div");
+        row.className = "waqm-sequence-edit-row";
+        row.innerHTML = `
+          <textarea class="waqm-sequence-edit-text" placeholder="Escribe el mensaje ${idx + 1}...">${window.escapeHtml(msg.text || "")}</textarea>
+          <button class="waqm-sequence-edit-up">⬆️</button>
+          <button class="waqm-sequence-edit-down">⬇️</button>
+          <button class="waqm-sequence-edit-delete">🗑️</button>
+        `;
+        row.querySelector(".waqm-sequence-edit-up").onclick = () => {
+          if (idx > 0) {
+            [steps[idx - 1], steps[idx]] = [steps[idx], steps[idx - 1]];
+            renderList();
+          }
+        };
+        row.querySelector(".waqm-sequence-edit-down").onclick = () => {
+          if (idx < steps.length - 1) {
+            [steps[idx], steps[idx + 1]] = [steps[idx + 1], steps[idx]];
+            renderList();
+          }
+        };
+        row.querySelector(".waqm-sequence-edit-delete").onclick = () => {
+          steps.splice(idx, 1);
+          renderList();
+        };
+        row.querySelector(".waqm-sequence-edit-text").oninput = (e) => {
+          steps[idx].text = e.target.value;
+        };
+        seqListDiv.appendChild(row);
+      });
+    }
+    renderList();
+    seqAddBtn.onclick = () => {
+      steps.push({ id: window.generateId(), text: "" });
+      renderList();
+    };
+
+    // Guardar
+    saveBtn.onclick = () => {
+      overlay.remove();
+      if (sequenceToggle.checked) {
+        resolve({
+          isSequence: true,
+          name: seqNameInput.value.trim(),
+          sequence: steps,
+        });
+      } else {
+        resolve({
+          isSequence: false,
+          name: nameInput.value.trim(),
+          text: textInput.value.trim(),
+        });
+      }
+    };
+    // Cancelar
+    cancelBtn.onclick = () => {
+      overlay.remove();
       resolve(null);
-    });
-
-    saveBtn.addEventListener("click", () => {
-      const name = nameInput.value.trim();
-      const text = textInput.value.trim();
-
-      if (!name) {
-        nameInput.focus();
-        nameInput.style.borderColor = "#ff0000";
-        setTimeout(() => {
-          nameInput.style.borderColor = "";
-        }, 2000);
-        return;
-      }
-
-      if (!text) {
-        textInput.focus();
-        textInput.style.borderColor = "#ff0000";
-        setTimeout(() => {
-          textInput.style.borderColor = "";
-        }, 2000);
-        return;
-      }
-
-      closeModal();
-      resolve({ name, text });
-    });
-
-    // Cerrar al hacer clic en el overlay
-    overlay.addEventListener("click", (e) => {
-      if (e.target === overlay) {
-        closeModal();
-        resolve(null);
-      }
-    });
-
+    };
     // Cerrar con ESC
     const handleEscape = (e) => {
       if (e.key === "Escape") {
-        closeModal();
+        overlay.remove();
         resolve(null);
         document.removeEventListener("keydown", handleEscape);
       }
     };
     document.addEventListener("keydown", handleEscape);
-
-    // Guardar con Ctrl+Enter
-    const handleCtrlEnter = (e) => {
-      if (e.ctrlKey && e.key === "Enter") {
-        saveBtn.click();
-        document.removeEventListener("keydown", handleCtrlEnter);
-      }
-    };
-    document.addEventListener("keydown", handleCtrlEnter);
   });
-}
+};
 
 // Modal para añadir/editar carpetas con selector de color
 function showFolderModal({ title, nameValue, colorValue }) {

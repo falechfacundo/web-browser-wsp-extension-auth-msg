@@ -19,10 +19,24 @@ async function loadData() {
         if (window.appData.debugMode === undefined) {
           window.appData.debugMode = false;
         }
-        // Asegurar que cada carpeta tenga un color
+        // Normalizar estructura de datos
         window.appData.folders.forEach((folder) => {
+          // Asegurar que cada carpeta tenga un color
           if (!folder.color) {
             folder.color = window.FOLDER_COLORS[0].value;
+          }
+          // Normalizar mensajes y secuencias
+          if (folder.messages) {
+            folder.messages.forEach((msg) => {
+              // Si es secuencia, limpiar campo 'name' de sub-mensajes (legacy)
+              if (msg.type === "sequence" && msg.sequence) {
+                msg.sequence = msg.sequence.map((subMsg) => ({
+                  id: subMsg.id,
+                  text: subMsg.text || "",
+                  // Eliminar 'name' si existe
+                }));
+              }
+            });
           }
         });
       } else {

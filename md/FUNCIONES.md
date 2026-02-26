@@ -2,39 +2,38 @@
 
 ## 📊 Resumen General
 
-- **Total de funciones**: 27
-- **Líneas totales del archivo**: 1033
-- **Funciones asíncronas**: 5
-- **Funciones de UI**: 11
-- **Funciones de lógica**: 16
+- **Total de funciones**: 35+
+- **Módulos**: 6 archivos JavaScript
+- **Funciones asíncronas**: 8
+- **Funciones de UI**: 17
+- **Funciones de lógica**: 18
 
 ---
 
 ## 🗂️ Funciones por Categoría
 
-### 📦 ALMACENAMIENTO (3 funciones)
+### 📦 ALMACENAMIENTO (3 funciones) - storage.js
 
-#### `loadData()` - **42 líneas** (38-79)
+#### `loadData()` - **Async**
 
-- **Tipo**: `async function`
 - **Descripción**: Carga los datos guardados desde `chrome.storage.local`
 - **Funcionalidad**:
   - Recupera configuración y carpetas guardadas
-  - Asegura compatibilidad con versiones anteriores (agrega `typingSpeed`, `autoSend`, `color`)
+  - Asegura compatibilidad con versiones anteriores (agrega `typingSpeed`, `autoSend`, `debugMode`)
+  - **Normaliza datos legacy**: Elimina campo 'name' de sub-mensajes en secuencias
+  - Asigna colores faltantes a carpetas
   - Inicializa datos de ejemplo si es primera instalación
   - Retorna una Promise
 
-#### `saveData()` - **5 líneas** (92-96)
+#### `saveData()`
 
-- **Tipo**: `function`
 - **Descripción**: Guarda los datos en `chrome.storage.local`
 - **Funcionalidad**:
   - Persiste el objeto `appData` completo
-  - Muestra log de confirmación en consola
+  - Incluye carpetas, mensajes, secuencias, y configuraciones
 
-#### `generateId()` - **3 líneas** (99-101)
+#### `generateId()`
 
-- **Tipo**: `function`
 - **Descripción**: Genera identificadores únicos
 - **Funcionalidad**:
   - Combina timestamp con string aleatorio
@@ -42,162 +41,421 @@
 
 ---
 
-### 🎨 INTERFAZ DE USUARIO - SIDEBAR (3 funciones)
+### ⌨️ TIPEO Y SIMULACIÓN HUMANA (8 funciones) - typing.js
 
-#### `createSidebar()` - **52 líneas** (105-156)
+#### `useMessage(text, messageId)` - **Async**
 
-- **Tipo**: `function`
+- **Descripción**: Función principal que escribe un mensaje simulando tipeo humano
+- **Parámetros**:
+  - `text` - Texto a escribir (soporta `\n` para multilinea)
+  - `messageId` - ID del mensaje para animación visual (opcional)
+- **Funcionalidad**:
+  - Marca `window.isTyping = true` y `cancelTyping = false`
+  - Muestra botón de cancelar en UI
+  - Agrega clase `waqm-message-writing` al mensaje en sidebar
+  - Encuentra el input box de WhatsApp
+  - Escribe carácter por carácter con delays gaussianos
+  - Maneja saltos de línea con Shift+Enter
+  - Chequea `window.cancelTyping` en cada iteración
+  - Auto-envía si `appData.autoSend` está activado
+  - Oculta botón de cancelar al terminar
+  - Logs detallados si `debugMode` está activado
+
+#### `useMessageSequence(sequence, sequenceId)` - **Async**
+
+- **Descripción**: Ejecuta una secuencia de múltiples mensajes consecutivos
+- **Parámetros**:
+  - `sequence` - Array de objetos `{id, text}`
+  - `sequenceId` - ID de la secuencia para animación visual
+- **Funcionalidad**:
+  - Marca elemento de secuencia con clase `waqm-message-writing`
+  - Itera sobre cada mensaje llamando `useMessage()`
+  - Agrega delay gaussiano entre mensajes (6x más largo que entre caracteres)
+  - Chequea `window.cancelTyping` entre mensajes
+  - Remueve animación al finalizar
+
+#### `gaussianRandom(mean, stdDev)`
+
+- **Descripción**: Genera números aleatorios con distribución gaussiana
+- **Implementación**: Box-Muller transform
+- **Funcionalidad**:
+  - Simula patrones de tipeo humano realistas
+  - Mayor concentración cerca del promedio
+  - Variación natural con desviación estándar
+  - Previene valores negativos
+
+#### `getTypingDelayParams()`
+
+- **Descripción**: Retorna parámetros de delay según velocidad configurada
+- **Velocidades**:
+  - **slow**: baseMean 225ms, stdDev 50ms, peakMax 500ms
+  - **normal**: baseMean 120ms, stdDev 25ms, peakMax 300ms
+  - **fast**: baseMean 65ms, stdDev 15ms, peakMax 150ms
+
+#### `insertLineBreakHuman(inputBox, debugMode)` - **Async**
+
+- **Descripción**: Inserta salto de línea simulando Shift+Enter humano
+- **Funcionalidad**:
+  - Dispara evento `keydown` con `shiftKey: true`
+  - Inserta `<br>` usando Selection API
+  - Dispara evento `input` tipo "insertLineBreak"
+  - Dispara evento `keyup` con `shiftKey: true`
+  - Logs detallados en modo debug
+
+#### `findWhatsAppInputBox()`
+
+- **Descripción**: Localiza el campo de entrada de WhatsApp Web
+- **Selectores**: Prueba múltiples selectores CSS conocidos
+- **Retorna**: Elemento DOM del contenteditable o null
+
+#### `findWhatsAppSendButton()`
+
+- **Descripción**: Localiza el botón de enviar de WhatsApp Web
+- **Selectores**: Prueba múltiples selectores incluyendo `data-tab`, `aria-label`, iconos
+- **Maneja**: Casos donde el selector encuentra el ícono SVG en vez del botón
+
+#### `sleep(ms)` - **Async**
+
+- **Descripción**: Helper para crear delays asíncronos
+- **Uso**: `await sleep(100)`
+
+---
+
+### 🎨 INTERFAZ DE USUARIO - SIDEBAR (5 funciones) - ui-sidebar.js
+
+#### `createSidebar()`
+
 - **Descripción**: Crea la barra lateral completa de la extensión
 - **Funcionalidad**:
   - Verifica si ya existe (evita duplicados)
-  - Genera HTML con controles de velocidad y auto-envío
-  - Crea botón de expansión
+  - Genera HTML con header, controles y contenedor de carpetas
+  - **Botones export/import** (📤📥) en header
+  - **Barra de búsqueda** con placeholder
+  - **Control de velocidad** con slider (3 posiciones)
+  - **Toggle de envío automático**
+  - **Botón de cancelar** (creado pero oculto inicialmente)
+  - Botón de minimizar
   - Inicializa event listeners
   - Llama a `renderFolders()`
 
-#### `toggleSidebar()` - **18 líneas** (968-985)
+#### `setupEventListeners()`
 
-- **Tipo**: `function`
+- **Descripción**: Configura todos los event listeners de la sidebar
+- **Listeners**:
+  - Control de velocidad (slider) → actualiza `appData.typingSpeed`
+  - Toggle de envío automático → actualiza `appData.autoSend`
+  - Botón de minimizar → llama `toggleSidebar()`
+  - Botón de expandir → llama `expandSidebar()`
+  - **Input de búsqueda** → llama `renderFolders(searchTerm)` en tiempo real
+  - **Botón exportar** → llama `exportFoldersAndMessages()`
+  - **Botón importar** → abre file picker
+  - **File picker** → lee JSON y llama `importFoldersAndMessages()`
+  - Botón "Nueva Carpeta" → llama `addFolder()`
+  - **Botón cancelar** → setea `window.cancelTyping = true`
+
+#### `toggleSidebar()`
+
 - **Descripción**: Alterna entre estado minimizado/expandido del sidebar
 - **Funcionalidad**:
-  - Cambia clases CSS
+  - Toggle clase `waqm-minimized`
   - Muestra/oculta contenido
-  - Alterna texto del botón entre "−" y "+"
-  - Controla visibilidad del botón de expansión
+  - Cambia texto del botón ("−" ↔ "+")
+  - Controla visibilidad del botón de expansión flotante
 
-#### `expandSidebar()` - **12 líneas** (987-998)
+#### `expandSidebar()`
 
-- **Tipo**: `function`
 - **Descripción**: Expande el sidebar desde estado minimizado
 - **Funcionalidad**:
   - Remueve clase `waqm-minimized`
-  - Restaura display y contenido
+  - Restaura display del contenido
   - Oculta botón de expansión flotante
 
 ---
 
-### 📂 RENDERIZADO (3 funciones)
+### 📂 RENDERIZADO (4 funciones) - ui-folders.js
 
-#### `renderFolders()` - **11 líneas** (160-170)
+#### `renderFolders(searchTerm = "")`
 
-- **Tipo**: `function`
-- **Descripción**: Renderiza todas las carpetas en el contenedor
+- **Descripción**: Renderiza todas las carpetas con filtro de búsqueda
+- **Parámetros**: `searchTerm` - String de búsqueda (opcional)
 - **Funcionalidad**:
   - Limpia contenedor actual
+  - Normaliza término de búsqueda (sin acentos, lowercase)
   - Itera sobre `appData.folders`
+  - **Filtra por nombre de carpeta**
+  - **Filtra mensajes y secuencias** que coincidan
+  - Para secuencias, busca también en sub-mensajes
   - Crea elementos de carpeta con `createFolderElement()`
+  - Solo muestra carpetas que tengan coincidencias (o todas si no hay búsqueda)
 
-#### `createFolderElement(folder)` - **66 líneas** (172-237)
+#### `createFolderElement(folder)`
 
-- **Tipo**: `function`
-- **Parámetros**: `folder` - objeto con datos de carpeta
 - **Descripción**: Crea el elemento DOM completo de una carpeta
 - **Funcionalidad**:
-  - Aplica color personalizado al header (background + border)
-  - Renderiza título, ícono de colapso, y acciones
-  - Itera mensajes y crea sus elementos
-  - Agrega botón "Nuevo Mensaje"
-  - Conecta event listeners (editar, eliminar)
+  - Aplica **color personalizado** (background + border)
+  - Renderiza header con título y botones
+  - Ícono de colapso (▶ o ▼)
+  - Botones: ➕ Nuevo mensaje, ✏️ Editar, 🗑️ Eliminar
+  - Itera mensajes y crea elementos según tipo (normal o sequence)
+  - Conecta event listeners para todas las acciones
 
-#### `createMessageElement(message, folderId)` - **50 líneas** (239-288)
+#### `createMessageElement(message, folderId)`
 
-- **Tipo**: `function`
+- **Descripción**: Crea el elemento DOM de un mensaje normal
 - **Parámetros**:
-  - `message` - objeto con datos del mensaje
+  - `message` - objeto `{id, name, text}`
   - `folderId` - ID de la carpeta padre
-- **Descripción**: Crea el elemento DOM de un mensaje individual
 - **Funcionalidad**:
-  - Genera preview del texto (primeras 50 caracteres)
+  - Muestra nombre del mensaje en negrita
+  - Preview del texto (primeras 50 caracteres)
   - Detecta mensajes multilínea (agrega indicador `↵`)
-  - Crea botones de acción (usar, editar, eliminar)
-  - Conecta event listeners para cada acción
+  - Botones de acción: ✅ Usar, ✏️ Editar, 🗑️ Eliminar
+  - Conecta listeners para `useMessage()`, `editMessage()`, `deleteMessage()`
+
+#### `createSequenceElement(sequence, folderId)`
+
+- **Descripción**: Crea el elemento DOM de una secuencia de mensajes
+- **Parámetros**:
+  - `sequence` - objeto `{id, type: 'sequence', name, sequence: [{id, text}]}`
+  - `folderId` - ID de la carpeta padre
+- **Funcionalidad**:
+  - Muestra nombre de la secuencia
+  - Lista de sub-mensajes numerados (1., 2., 3., ...)
+  - Preview de cada sub-mensaje (50 caracteres)
+  - Botones: ✅ Usar secuencia, ✏️ Editar, 🗑️ Eliminar
+  - Conecta `useMessageSequence()` para ejecutar secuencia completa
+  - **Data attribute** `data-sequence-id` para animaciones
 
 ---
 
-### 📁 GESTIÓN DE CARPETAS (4 funciones)
+### 📁 GESTIÓN DE CARPETAS (4 funciones) - ui-folders.js
 
-#### `toggleFolder(folderId)` - **8 líneas** (292-299)
+#### `toggleFolder(folderId)`
 
-- **Tipo**: `function`
-- **Parámetros**: `folderId` - ID de carpeta
 - **Descripción**: Alterna estado colapsado/expandido de una carpeta
 - **Funcionalidad**:
   - Invierte valor de `folder.collapsed`
-  - Guarda y re-renderiza
+  - Guarda con `saveData()`
+  - Re-renderiza con `renderFolders()`
 
-#### `addFolder()` - **18 líneas** (301-318)
+#### `addFolder()` - **Async**
 
-- **Tipo**: `function`
 - **Descripción**: Crea una nueva carpeta
 - **Funcionalidad**:
-  - Muestra modal con nombre y selector de color
-  - Crea objeto carpeta con ID único
+  - Muestra `showFolderModal()` con título "Nueva Carpeta"
+  - Usuario selecciona nombre y color
+  - Crea objeto carpeta: `{id, name, color, collapsed: false, messages: []}`
   - Agrega a `appData.folders`
   - Guarda y re-renderiza
 
-#### `editFolder(folderId)` - **17 líneas** (320-336)
+#### `editFolder(folderId)` - **Async**
 
-- **Tipo**: `function`
-- **Parámetros**: `folderId` - ID de carpeta
 - **Descripción**: Edita nombre y color de carpeta existente
 - **Funcionalidad**:
   - Busca carpeta por ID
-  - Muestra modal pre-llenado
-  - Actualiza propiedades
+  - Muestra modal pre-llenado con valores actuales
+  - Actualiza propiedades si usuario confirma
   - Guarda y re-renderiza
 
-#### `deleteFolder(folderId)` - **13 líneas** (338-350)
+#### `deleteFolder(folderId)`
 
-- **Tipo**: `function`
-- **Parámetros**: `folderId` - ID de carpeta
 - **Descripción**: Elimina una carpeta y todos sus mensajes
 - **Funcionalidad**:
   - Muestra confirmación al usuario
-  - Filtra carpeta del array
+  - Filtra carpeta del array `appData.folders`
+  - **Elimina también todos los mensajes y secuencias** de la carpeta
   - Guarda y re-renderiza
 
 ---
 
-### 💬 GESTIÓN DE MENSAJES (3 funciones)
+### 💬 GESTIÓN DE MENSAJES Y SECUENCIAS (7 funciones) - ui-folders.js
 
-#### `addMessage(folderId)` - **19 líneas** (354-372)
+#### `addMessageOrSequence(folderId)` - **Async**
 
-- **Tipo**: `async function`
-- **Parámetros**: `folderId` - ID de carpeta padre
-- **Descripción**: Agrega un nuevo mensaje a una carpeta
+- **Descripción**: Modal unificado para agregar mensaje normal o secuencia
 - **Funcionalidad**:
   - Busca carpeta por ID
-  - Muestra modal de mensaje
-  - Crea objeto mensaje con ID único
-  - Agrega a array de mensajes
+  - Muestra `showMessageModal()` con toggle
+  - Si `result.isSequence === true`:
+    - Crea objeto: `{id, type: 'sequence', name, sequence: [{id, text}]}`
+  - Si es mensaje normal:
+    - Crea objeto: `{id, name, text}`
+  - Agrega a `folder.messages`
   - Guarda y re-renderiza
 
-#### `editMessage(folderId, messageId)` - **20 líneas** (374-393)
+#### `editMessage(folderId, messageId)` - **Async**
 
-- **Tipo**: `async function`
-- **Parámetros**:
-  - `folderId` - ID de carpeta
-  - `messageId` - ID del mensaje
-- **Descripción**: Edita un mensaje existente
+- **Descripción**: Edita un mensaje normal existente
 - **Funcionalidad**:
   - Busca carpeta y mensaje por IDs
-  - Muestra modal pre-llenado
-  - Actualiza propiedades del mensaje
+  - Muestra modal pre-llenado con `nameValue` y `textValue`
+  - Actualiza `message.name` y `message.text`
   - Guarda y re-renderiza
 
-#### `deleteMessage(folderId, messageId)` - **12 líneas** (395-406)
+#### `deleteMessage(folderId, messageId)`
 
-- **Tipo**: `function`
-- **Parámetros**:
-  - `folderId` - ID de carpeta
-  - `messageId` - ID del mensaje
-- **Descripción**: Elimina un mensaje
+- **Descripción**: Elimina un mensaje normal
 - **Funcionalidad**:
   - Muestra confirmación
-  - Filtra mensaje del array
+  - Filtra mensaje del array `folder.messages`
   - Guarda y re-renderiza
 
+#### `editSequence(folderId, sequenceId)` - **Async**
+
+- **Descripción**: Edita una secuencia de mensajes
+- **Funcionalidad**:
+  - Busca carpeta y secuencia por IDs
+  - Muestra modal con toggle activado (`isSequence: true`)
+  - Pre-llena con `nameValue` y `sequenceValue`
+  - Usuario puede:
+    - Cambiar nombre de la secuencia
+    - Agregar/eliminar/reordenar sub-mensajes
+    - Editar texto de cada sub-mensaje
+  - Actualiza `sequence.name` y `sequence.sequence`
+  - Guarda y re-renderiza
+
+#### `deleteSequence(folderId, sequenceId)`
+
+- **Descripción**: Elimina una secuencia completa
+- **Funcionalidad**:
+  - Muestra confirmación
+  - Filtra secuencia del array `folder.messages`
+  - Guarda y re-renderiza
+
+#### `normalize(str)`
+
+- **Descripción**: Normaliza strings para búsqueda insensible a acentos
+- **Funcionalidad**:
+  - Chequea si `str` es null/undefined → retorna `""`
+  - Normaliza NFD (descompone caracteres acentuados)
+  - Remueve diacríticos con regex `/\p{Diacritic}/gu`
+  - Convierte a lowercase
+  - **Ejemplo**: `"Ñoño"` → `"nono"`
+
 ---
+
+### 🎭 MODALES (3 funciones) - ui-modals.js
+
+#### `showMessageModal({ title, nameValue, textValue, sequenceValue, isSequence })` - **Async**
+
+- **Descripción**: Modal unificado para crear/editar mensajes y secuencias
+- **Parámetros**:
+  - `title` - Título del modal
+  - `nameValue` - Nombre pre-llenado (opcional)
+  - `textValue` - Texto pre-llenado para mensaje normal (opcional)
+  - `sequenceValue` - Array de sub-mensajes para secuencia (opcional)
+  - `isSequence` - Boolean para mostrar UI de secuencia (default: false)
+- **Funcionalidad**:
+  - **Toggle** para cambiar entre mensaje simple y secuencia
+  - **Modo mensaje simple**:
+    - Input para nombre
+    - Textarea para texto
+  - **Modo secuencia**:
+    - Input para nombre de secuencia
+    - Lista editable de sub-mensajes
+    - Botón "Agregar mensaje" para añadir pasos
+    - Botones ⬆️⬇️ para reordenar
+    - Botón 🗑️ para eliminar paso
+  - Retorna Promise que resuelve a:
+    - `{isSequence: false, name, text}` para mensaje simple
+    - `{isSequence: true, name, sequence: [{id, text}]}` para secuencia
+    - `null` si se cancela
+  - **Nota**: Los sub-mensajes NO tienen campo 'name', solo {id, text}
+
+#### `showFolderModal({ title, nameValue, colorValue })` - **Async**
+
+- **Descripción**: Modal para crear/editar carpetas con selector de color
+- **Parámetros**:
+  - `title` - Título del modal
+  - `nameValue` - Nombre pre-llenado (opcional)
+  - `colorValue` - Color pre-seleccionado (opcional)
+- **Funcionalidad**:
+  - Input para nombre de carpeta
+  - Grid de colores seleccionables (8 colores de `FOLDER_COLORS`)
+  - Muestra preview visual del color
+  - Retorna `{name, color}` o `null` si se cancela
+
+#### `escapeHtml(text)`
+
+- **Descripción**: Sanitiza HTML para prevenir XSS
+- **Funcionalidad**:
+  - Reemplaza `&`, `<`, `>`, `"`, `'` con entidades HTML
+  - Se usa antes de insertar contenido con `innerHTML`
+
+---
+
+### 📤 EXPORTAR/IMPORTAR (2 funciones) - init.js
+
+#### `exportFoldersAndMessages()`
+
+- **Descripción**: Exporta todas las categorías y mensajes a archivo JSON
+- **Funcionalidad**:
+  - Mapea `appData.folders` a estructura limpia
+  - Preserva estructura de secuencias con sub-mensajes
+  - Crea Blob con JSON formateado (indent 2)
+  - Descarga archivo: `waqm-categorias-mensajes.json`
+  - Limpia URL después de descarga
+
+#### `importFoldersAndMessages(data)`
+
+- **Descripción**: Importa y valida datos desde archivo JSON
+- **Parámetros**: `data` - Objeto parseado desde JSON
+- **Funcionalidad**:
+  - Valida estructura: debe tener array `folders`
+  - Valida cada carpeta: debe tener `id` y `name`
+  - Normaliza estructura:
+    - Asigna color default si falta
+    - Asigna `collapsed: false` si falta
+    - Valida cada mensaje/secuencia
+    - **Limpia datos legacy**: Elimina campo 'name' de sub-mensajes en secuencias
+  - Pide confirmación antes de reemplazar datos
+  - Reemplaza `appData.folders` completamente
+  - Guarda y re-renderiza
+  - Muestra mensaje de éxito
+
+---
+
+### 🚀 INICIALIZACIÓN (2 funciones) - init.js
+
+#### `init()` - **Async**
+
+- **Descripción**: Función principal de inicialización de la extensión
+- **Funcionalidad**:
+  - Espera a que WhatsApp Web cargue con `waitForWhatsAppToLoad()`
+  - Carga datos con `loadData()`
+  - Crea sidebar con `createSidebar()`
+  - Configura listeners con `setupEventListeners()`
+  - Log de confirmación en consola
+
+#### `waitForWhatsAppToLoad()` - **Async**
+
+- **Descripción**: Espera a que WhatsApp Web esté completamente cargado
+- **Funcionalidad**:
+  - Busca elemento característico de WhatsApp Web
+  - Reintenta cada 500ms con delay exponencial
+  - Timeout después de 20 intentos
+  - Retorna Promise
+
+---
+
+## 🌐 Variables Globales
+
+### En `window` (compartidas entre módulos)
+
+**Datos:**
+- `window.FOLDER_COLORS` - Array de 8 objetos `{name, value, light}`
+- `window.appData` - Objeto con:
+  - `typingSpeed`: "slow" | "normal" | "fast"
+  - `autoSend`: boolean
+  - `debugMode`: boolean
+  - `folders`: Array de carpetas con mensajes y secuencias
+
+**Flags de control:**
+- `window.cancelTyping` - Boolean para cancelar escritura en progreso
+- `window.isTyping` - Boolean indicando si está escribiendo actualmente
+
+**Funciones exportadas:**
+Todas las funciones de cada módulo se exportan a `window` para acceso global entre módulos.
 
 ### ⌨️ ESCRITURA EN WHATSAPP (6 funciones)
 

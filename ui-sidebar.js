@@ -16,7 +16,12 @@ function createSidebar() {
   sidebar.innerHTML = `
     <div class="waqm-header">
       <h3>Mensajes Rápidos</h3>
-      <button class="waqm-btn waqm-btn-mini waqm-toggle-btn" title="Minimizar/Expandir">−</button>
+      <div class="waqm-header-btns">
+        <button class="waqm-btn waqm-btn-mini waqm-export-btn" title="Exportar categorías y mensajes">📤</button>
+        <button class="waqm-btn waqm-btn-mini waqm-import-btn" title="Importar categorías y mensajes">📥</button>
+        <button class="waqm-btn waqm-btn-mini waqm-toggle-btn" title="Minimizar/Expandir">−</button>
+        <input type="file" id="waqm-import-file" accept="application/json" style="display:none" />
+      </div>
     </div>
     <div class="waqm-content">
       <div class="waqm-search-bar">
@@ -58,6 +63,21 @@ function createSidebar() {
   expandBtn.addEventListener("click", expandSidebar);
   document.body.appendChild(expandBtn);
 
+  // Create cancel typing button (hidden by default)
+  const cancelTypingBtn = document.createElement("button");
+  cancelTypingBtn.id = "waqm-cancel-typing-btn";
+  cancelTypingBtn.className = "waqm-cancel-typing-btn";
+  cancelTypingBtn.title = "Cancelar escritura";
+  cancelTypingBtn.innerHTML = `
+    <span class="waqm-cancel-icon">❌</span>
+    <span class="waqm-cancel-text">Cancelar</span>
+  `;
+  cancelTypingBtn.style.display = "none";
+  cancelTypingBtn.addEventListener("click", () => {
+    window.cancelTyping = true;
+  });
+  document.body.appendChild(cancelTypingBtn);
+
   document.body.appendChild(sidebar);
 
   // Event listeners
@@ -68,13 +88,40 @@ function createSidebar() {
 // ==================== EVENT LISTENERS ====================
 
 function setupEventListeners() {
-    // Buscador rápido
-    const searchInput = document.getElementById("waqm-search-input");
-    if (searchInput) {
-      searchInput.addEventListener("input", (e) => {
-        window.renderFolders(e.target.value);
-      });
-    }
+  // Botón exportar
+  const exportBtn = document.querySelector(".waqm-export-btn");
+  if (exportBtn) {
+    exportBtn.addEventListener("click", window.exportFoldersAndMessages);
+  }
+
+  // Botón importar
+  const importBtn = document.querySelector(".waqm-import-btn");
+  const importFileInput = document.getElementById("waqm-import-file");
+  if (importBtn && importFileInput) {
+    importBtn.addEventListener("click", () => importFileInput.click());
+    importFileInput.addEventListener("change", (e) => {
+      const file = e.target.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = (evt) => {
+          try {
+            const data = JSON.parse(evt.target.result);
+            window.importFoldersAndMessages(data);
+          } catch (err) {
+            alert("Archivo inválido o corrupto.");
+          }
+        };
+        reader.readAsText(file);
+      }
+    });
+  }
+  // Buscador rápido
+  const searchInput = document.getElementById("waqm-search-input");
+  if (searchInput) {
+    searchInput.addEventListener("input", (e) => {
+      window.renderFolders(e.target.value);
+    });
+  }
   // Botón añadir carpeta
   const addFolderBtn = document.getElementById("waqm-add-folder-btn");
   if (addFolderBtn) {

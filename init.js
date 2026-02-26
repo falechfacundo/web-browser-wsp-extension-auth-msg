@@ -1,3 +1,113 @@
+// ==================== EXPORTAR E IMPORTAR DATOS ====================
+
+window.exportFoldersAndMessages = function () {
+  const data = {
+    folders: window.appData.folders.map((folder) => ({
+      id: folder.id,
+      name: folder.name,
+      color: folder.color,
+      collapsed: folder.collapsed,
+      messages: folder.messages.map((msg) => {
+        if (msg.type === "sequence") {
+          return {
+            id: msg.id,
+            type: "sequence",
+            name: msg.name,
+            sequence: msg.sequence.map((subMsg) => ({
+              id: subMsg.id,
+              text: subMsg.text,
+            })),
+          };
+        } else {
+          return {
+            id: msg.id,
+            name: msg.name,
+            text: msg.text,
+          };
+        }
+      }),
+    })),
+  };
+  const json = JSON.stringify(data, null, 2);
+  const blob = new Blob([json], { type: "application/json" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "waqm-categorias-mensajes.json";
+  document.body.appendChild(a);
+  a.click();
+  setTimeout(() => {
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }, 100);
+};
+
+window.importFoldersAndMessages = function (data) {
+  if (!data || !Array.isArray(data.folders)) {
+    alert("El archivo no contiene datos válidos de carpetas y mensajes.");
+    return;
+  }
+
+  // Validar y normalizar estructura de datos
+  try {
+    const normalizedFolders = data.folders.map((folder) => {
+      if (!folder.id || !folder.name) {
+        throw new Error("Carpeta inválida: falta id o nombre");
+      }
+
+      return {
+        id: folder.id,
+        name: folder.name,
+        color: folder.color || window.FOLDER_COLORS[0].value,
+        collapsed: folder.collapsed !== undefined ? folder.collapsed : false,
+        messages: (folder.messages || []).map((msg) => {
+          if (!msg.id) {
+            throw new Error("Mensaje inválido: falta id");
+          }
+
+          // Mensaje de secuencia
+          if (msg.type === "sequence") {
+            return {
+              id: msg.id,
+              type: "sequence",
+              name: msg.name || "Secuencia sin nombre",
+              sequence: (msg.sequence || []).map((subMsg) => ({
+                id: subMsg.id || window.generateId(),
+                // Eliminar campo 'name' si existe (legacy data)
+                text: subMsg.text || "",
+              })),
+            };
+          }
+          // Mensaje normal
+          else {
+            return {
+              id: msg.id,
+              name: msg.name || "Mensaje sin nombre",
+              text: msg.text || "",
+            };
+          }
+        }),
+      };
+    });
+
+    // Confirmar con el usuario
+    if (
+      !confirm(
+        "¿Deseas reemplazar todas las categorías y mensajes actuales por los importados?",
+      )
+    ) {
+      return;
+    }
+
+    window.appData.folders = normalizedFolders;
+    window.saveData();
+    window.renderFolders();
+    alert("¡Importación exitosa!");
+  } catch (error) {
+    alert("Error al importar datos: " + error.message);
+    console.error("Error de importación:", error);
+  }
+};
 // WhatsApp Web - Mensajes Rápidos
 // init.js - Inicialización y configuración global
 
@@ -28,10 +138,16 @@ window.appData = {
   //     color: '#00a884',
   //     collapsed: false,
   //     messages: [
-  //       { id: 'msg-1', name: 'Saludo', text: 'Hola, ¿cómo estás?' }
+  //       // Mensajes individuales
+  //       { id: 'msg-1', name: 'Saludo', text: 'Hola, ¿cómo estás?' },
+  //       // Secuencia de mensajes programados
+  //       { id: 'seq-1', type: 'sequence', name: 'Secuencia bienvenida', sequence: [
+  //           { id: 'msg-2', text: '¡Hola!' },
+  //           { id: 'msg-3', text: 'Soy Faia, ¿cómo puedo ayudarte?' }
+  //         ] }
   //     ]
   //   }
-  // ]
+  // ];
 };
 
 // ==================== INICIALIZACIÓN ====================
