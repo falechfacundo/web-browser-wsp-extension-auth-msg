@@ -429,6 +429,37 @@
   }
 }
 
+/* ==================== DRAG AND DROP ==================== */
+
+.waqm-message[draggable="true"] {
+  cursor: move;
+}
+
+.waqm-message.waqm-dragging {
+  opacity: 0.5;
+  transform: scale(0.95);
+  cursor: grabbing;
+}
+
+.waqm-message.waqm-drag-over {
+  border-top: 3px solid #00a884;
+  margin-top: 8px;
+  transform: translateY(4px);
+  transition: all 0.2s ease;
+}
+
+.waqm-message.waqm-drag-over::before {
+  content: "";
+  position: absolute;
+  top: -4px;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: #00a884;
+  border-radius: 2px;
+  box-shadow: 0 0 8px rgba(0, 168, 132, 0.4);
+}
+
 /* ==================== SCROLLBAR ==================== */
 
 .waqm-content::-webkit-scrollbar {

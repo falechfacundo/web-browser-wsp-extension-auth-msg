@@ -5,6 +5,7 @@
 ### 🚀 Nuevas Funcionalidades Mayores
 
 #### Secuencias de Mensajes
+
 - **Modal unificado** con toggle para crear mensajes simples o secuencias
 - Múltiples mensajes enviados automáticamente uno tras otro
 - Delays gaussianos naturales entre mensajes (6x el delay entre caracteres)
@@ -14,6 +15,7 @@
 - Los sub-mensajes NO requieren nombre individual, solo la secuencia completa
 
 #### Exportar/Importar
+
 - **Botón de exportar** (📤) en header - descarga JSON con todas las categorías y mensajes
 - **Botón de importar** (📥) en header - carga JSON previamente exportado
 - Validación y normalización de estructura de datos
@@ -22,6 +24,7 @@
 - Preserva secuencias y mensajes multilinea
 
 #### Búsqueda Inteligente
+
 - Barra de búsqueda en la parte superior del sidebar
 - Búsqueda en tiempo real (sin necesidad de presionar Enter)
 - **Insensible a acentos y mayúsculas** ("Nino" encuentra "Niño")
@@ -30,6 +33,7 @@
 - Filtra automáticamente carpetas y mensajes que coincidan
 
 #### Sistema de Cancelación
+
 - **Botón rojo de cancelar** aparece en esquina inferior derecha durante escritura
 - Cancela inmediatamente la escritura en progreso
 - Funciona tanto para mensajes simples como secuencias
@@ -40,15 +44,18 @@
 ### ✨ Mejoras de Interfaz
 
 #### Iconos Mejorados
+
 - Cambio de iconos de exportar/importar: ⬇️⬆️ → 📤📥 (más descriptivos)
 - Unificación de botón de ejecutar: ▶️ → ✅ (mismo para mensajes y secuencias)
 
 #### Layout de Secuencias Reorganizado
+
 - Mensajes de secuencia ahora usan el mismo layout que mensajes normales
 - Título arriba, sub-mensajes debajo (no al lado con línea divisoria)
 - Mayor consistencia visual en el sidebar
 
 #### Animaciones Visuales
+
 - Emoji ✍️ animado durante escritura
 - Clase `waqm-message-writing` para mensajes y secuencias
 - Animación de pulso en el borde
@@ -58,19 +65,23 @@
 ### 🐛 Correcciones de Bugs
 
 #### Búsqueda Reparada
+
 - **Corregido:** Búsqueda se rompía al escribir un solo carácter
 - **Causa:** Función `normalize()` no manejaba valores `undefined`
 - **Solución:** Chequeo de valores nulos y búsqueda en secuencias correctamente implementada
 
 #### Declaraciones Múltiples de Variables
+
 - **Corregido:** `const cancelBtn` declarado múltiples veces en typing.js
 - **Solución:** Una sola declaración al inicio de la función, referencias sin `const`
 
 #### Text Color del Toggle
+
 - **Corregido:** Texto del toggle "Secuencia de mensajes" era blanco sobre blanco (invisible)
 - **Solución:** Cambio de color a `#111b21` (negro) en styles.css
 
 #### Data Schema de Secuencias
+
 - **Corregido:** Sub-mensajes tenían campo 'name' innecesario
 - **Solución:** Eliminar campo 'name' de sub-mensajes, solo `{id, text}`
 - **Migración:** Datos legacy se normalizan automáticamente en `loadData()` e `importFoldersAndMessages()`
@@ -78,6 +89,7 @@
 ### 🔧 Cambios Técnicos
 
 #### Estructura de Datos
+
 ```javascript
 // Mensaje normal
 {
@@ -101,11 +113,13 @@
 #### Funciones Nuevas/Actualizadas
 
 **typing.js:**
+
 - `useMessageSequence(sequence, sequenceId)` - Nueva
 - `useMessage(text, messageId)` - Actualizada con cancelación
 - Variables globales: `window.cancelTyping`, `window.isTyping`
 
 **ui-folders.js:**
+
 - `renderFolders(searchTerm)` - Actualizada con búsqueda
 - `createSequenceElement(sequence, folderId)` - Nueva
 - `addMessageOrSequence(folderId)` - Nueva (modal unificado)
@@ -114,21 +128,26 @@
 - `normalize(str)` - Nueva (para búsqueda sin acentos)
 
 **ui-modals.js:**
+
 - `showMessageModal()` - Completamente rediseñada con toggle
 
 **ui-sidebar.js:**
+
 - Botón de cancelar añadido con listeners
 - Botones exportar/importar añadidos
 - Barra de búsqueda con listener `input`
 
 **init.js:**
+
 - `exportFoldersAndMessages()` - Nueva
 - `importFoldersAndMessages(data)` - Nueva
 
 **storage.js:**
+
 - `loadData()` - Actualizada con migración de datos legacy
 
 #### CSS
+
 - `.waqm-sequence` - Nuevos estilos
 - `.waqm-sequence-messages` - Layout actualizado
 - `.waqm-cancel-typing-btn` - Botón de cancelar con animación
@@ -138,10 +157,12 @@
 ### 📚 Documentación
 
 #### Nuevos Archivos
+
 - **SECUENCIAS.md** - Documentación completa de secuencias (casos de uso, flujo, delays)
 - **CHANGELOG.md** - Este archivo
 
 #### Actualizados
+
 - **README.md** - Todas las nuevas funcionalidades documentadas
 - **ARQUITECTURA.md** - Módulos y funciones actualizadas
 - **FUNCIONES.md** - Mapeo completo de 35+ funciones
@@ -182,12 +203,14 @@
 ## Roadmap Futuro
 
 ### Planificado para v2.1
+
 - [ ] Drag & drop para reordenar
 - [ ] Variables dinámicas ({{nombre}}, {{fecha}})
 - [ ] Atajos de teclado
 - [ ] Estadísticas de uso
 
 ### Considerado para v3.0
+
 - [ ] Tema oscuro
 - [ ] Sincronización en la nube
 - [ ] Plantillas de secuencias predefinidas

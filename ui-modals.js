@@ -93,36 +93,40 @@ window.showMessageModal = function ({
       });
     }
     renderList();
-    
+
     // Toggle UI
     sequenceToggle.onchange = () => {
       if (sequenceToggle.checked) {
         // Convertir mensaje simple a secuencia
         const currentText = textInput.value.trim();
-        
+
         // Si hay texto en el textarea y la secuencia está vacía, convertirlo
         if (currentText && steps.length === 0) {
           // Dividir por saltos de línea
-          const lines = currentText.split('\n').filter(line => line.trim() !== '');
-          
+          const lines = currentText
+            .split("\n")
+            .filter((line) => line.trim() !== "");
+
           if (lines.length > 0) {
             // Crear un mensaje de secuencia por cada línea
-            steps = lines.map(line => ({
+            steps = lines.map((line) => ({
               id: window.generateId(),
-              text: line.trim()
+              text: line.trim(),
             }));
           } else {
             // Si no hay líneas válidas, crear un mensaje con el texto completo
-            steps = [{
-              id: window.generateId(),
-              text: currentText
-            }];
+            steps = [
+              {
+                id: window.generateId(),
+                text: currentText,
+              },
+            ];
           }
-          
+
           // Renderizar la lista actualizada
           renderList();
         }
-        
+
         singleField.style.display = "none";
         sequenceField.style.display = "block";
       } else {
@@ -130,17 +134,17 @@ window.showMessageModal = function ({
         sequenceField.style.display = "none";
       }
     };
-    
+
     seqAddBtn.onclick = () => {
       steps.push({ id: window.generateId(), text: "" });
       renderList();
-      
+
       // Hacer scroll y focus en el nuevo mensaje agregado
       setTimeout(() => {
         const lastRow = seqListDiv.lastElementChild;
         if (lastRow) {
-          lastRow.scrollIntoView({ behavior: 'smooth', block: 'center' });
-          const textarea = lastRow.querySelector('.waqm-sequence-edit-text');
+          lastRow.scrollIntoView({ behavior: "smooth", block: "center" });
+          const textarea = lastRow.querySelector(".waqm-sequence-edit-text");
           if (textarea) {
             textarea.focus();
           }

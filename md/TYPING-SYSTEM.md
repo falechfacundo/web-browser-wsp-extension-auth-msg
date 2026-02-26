@@ -43,10 +43,12 @@ El sistema de tipeo (`typing.js`) simula escritura humana realista en WhatsApp W
 **Propósito:** Escribir un mensaje completo simulando tipeo humano.
 
 **Parámetros:**
+
 - `text` - String a escribir (soporta `\n` para multilinea)
 - `messageId` - ID del mensaje para animación visual (opcional)
 
 **Flujo:**
+
 1. Setear flags: `window.isTyping = true`, `cancelTyping = false`
 2. Mostrar botón de cancelar
 3. Marcar mensaje con clase `waqm-message-writing`
@@ -57,6 +59,7 @@ El sistema de tipeo (`typing.js`) simula escritura humana realista en WhatsApp W
 8. Limpiar animaciones y ocultar botón de cancelar
 
 **Manejo de cancelación:**
+
 ```javascript
 for (let i = 0; i < text.length; i++) {
   if (window.cancelTyping) {
@@ -75,10 +78,12 @@ for (let i = 0; i < text.length; i++) {
 **Propósito:** Ejecutar múltiples mensajes consecutivos con delays naturales.
 
 **Parámetros:**
+
 - `sequence` - Array de objetos `{id, text}`
 - `sequenceId` - ID de la secuencia para animación (opcional)
 
 **Flujo:**
+
 1. Marcar **elemento de secuencia completo** con `waqm-message-writing`
 2. Iterar sobre cada sub-mensaje
 3. Para cada sub-mensaje:
@@ -88,10 +93,11 @@ for (let i = 0; i < text.length; i++) {
 4. Remover animación de secuencia al finalizar
 
 **Delays entre mensajes:**
+
 ```javascript
 const delay = gaussianRandom(
-  delayParams.baseMean * 6,    // 6x el delay base
-  delayParams.baseStdDev * 2   // Mayor variación
+  delayParams.baseMean * 6, // 6x el delay base
+  delayParams.baseStdDev * 2, // Mayor variación
 );
 // Velocidad Normal: ~720ms ± 50ms entre mensajes
 // Velocidad Slow: ~1350ms ± 100ms
@@ -99,6 +105,7 @@ const delay = gaussianRandom(
 ```
 
 **¿Por qué 6x?** Simula el tiempo humano de:
+
 - Pensar qué escribir siguiente
 - Revisar mensaje anterior
 - Decidir presionar Enter
@@ -121,6 +128,7 @@ delay = max(0, z0 * stdDev + mean)
 - Outliers ocasionales (picos de lentitud)
 
 **Ejemplo con μ=120ms, σ=25ms:**
+
 ```
 Delays generados:
 115ms, 132ms, 98ms, 145ms, 121ms, 108ms, 134ms, 119ms...
@@ -137,6 +145,7 @@ Delays generados:
 | Fast      | 65ms      | 15ms    | 150ms    | 8%          |
 
 **Uso:**
+
 ```javascript
 const params = getTypingDelayParams();
 // params.baseMean, params.baseStdDev, params.peakMax, params.peakChance
@@ -147,6 +156,7 @@ const params = getTypingDelayParams();
 **Propósito:** Insertar salto de línea simulando Shift+Enter humano.
 
 **Flujo:**
+
 1. Disparar evento `keydown` con `shiftKey: true`
 2. Insertar `<br>` usando Selection API
 3. Disparar evento `input` tipo "insertLineBreak"
@@ -172,13 +182,14 @@ Enviar múltiples mensajes consecutivos automáticamente:
 const secuencia = [
   { id: "1", text: "Hola! 👋" },
   { id: "2", text: "Bienvenido a nuestro servicio" },
-  { id: "3", text: "¿En qué te puedo ayudar?" }
+  { id: "3", text: "¿En qué te puedo ayudar?" },
 ];
 
 await useMessageSequence(secuencia, "seq-123");
 ```
 
 **Resultado:**
+
 1. Escribe "Hola! 👋" car por car
 2. Delay ~720ms (velocidad normal)
 3. Escribe "Bienvenido a nuestro servicio"
@@ -212,7 +223,7 @@ Ver [SECUENCIAS.md](SECUENCIAS.md) para documentación completa.
 
 ```javascript
 window.cancelTyping = false; // Flag para cancelar
-window.isTyping = false;     // Flag indicando si está escribiendo
+window.isTyping = false; // Flag indicando si está escribiendo
 ```
 
 ### Flujo de Cancelación
@@ -248,6 +259,7 @@ Si cancelTyping === true:
 ```
 
 **Visibilidad:**
+
 - Se muestra cuando `useMessage()` inicia
 - Se oculta cuando termina o se cancela
 - Click setea `window.cancelTyping = true`
@@ -255,6 +267,7 @@ Si cancelTyping === true:
 ### Chequeo en Múltiples Puntos
 
 **En `useMessage()`:**
+
 ```javascript
 // Dentro del loop de caracteres
 for (let i = 0; i < text.length; i++) {
@@ -273,13 +286,14 @@ for (let i = 0; i < text.length; i++) {
 ```
 
 **En `useMessageSequence()`:**
+
 ```javascript
 for (let i = 0; i < sequence.length; i++) {
   // Chequeo 1: Antes de cada mensaje
   if (window.cancelTyping) break;
-  
+
   await useMessage(sequence[i].text, sequence[i].id);
-  
+
   // Chequeo 2: Antes del delay
   if (i < sequence.length - 1 && !window.cancelTyping) {
     await sleep(delay);
@@ -298,6 +312,7 @@ for (let i = 0; i < sequence.length; i++) {
 WhatsApp Web usa `contenteditable` con `<div>` y `<br>` para saltos de línea.
 
 **Comportamiento requerido:**
+
 - Enter solo → Envía mensaje
 - Shift+Enter → Salto de línea
 
@@ -306,20 +321,24 @@ WhatsApp Web usa `contenteditable` con `<div>` y `<br>` para saltos de línea.
 **Función:** `insertLineBreakHuman(inputBox, debugMode)`
 
 **Eventos disparados:**
+
 1. `KeyboardEvent("keydown")` con `shiftKey: true`
 2. Insertar `<br>` con Selection API
 3. `InputEvent("input")` con `inputType: "insertLineBreak"`
 4. `KeyboardEvent("keyup")` con `shiftKey: true`
 
 **Código:**
+
 ```javascript
 // 1. Shift+Enter DOWN
-inputBox.dispatchEvent(new KeyboardEvent("keydown", {
-  key: "Enter",
-  shiftKey: true, // ← CRÍTICO
-  bubbles: true,
-  cancelable: true,
-}));
+inputBox.dispatchEvent(
+  new KeyboardEvent("keydown", {
+    key: "Enter",
+    shiftKey: true, // ← CRÍTICO
+    bubbles: true,
+    cancelable: true,
+  }),
+);
 
 // 2. Insertar <br> manualmente
 const sel = window.getSelection();
@@ -333,88 +352,94 @@ if (sel.rangeCount > 0) {
 }
 
 // 3. Input event
-inputBox.dispatchEvent(new InputEvent("input", {
-  inputType: "insertLineBreak",
-  bubbles: true,
-}));
+inputBox.dispatchEvent(
+  new InputEvent("input", {
+    inputType: "insertLineBreak",
+    bubbles: true,
+  }),
+);
 
 // 4. Shift+Enter UP
-inputBox.dispatchEvent(new KeyboardEvent("keyup", {
-  key: "Enter",
-  shiftKey: true,
-  bubbles: true,
-}));
+inputBox.dispatchEvent(
+  new KeyboardEvent("keyup", {
+    key: "Enter",
+    shiftKey: true,
+    bubbles: true,
+  }),
+);
 ```
 
 **Resultado:** Saltos de línea nativos en WhatsApp Web sin enviar mensaje.
 
 ---
-│     ├─ Buscar con selectores        │
-│     └─ Si no existe → Alert + Exit  │
+
+│ ├─ Buscar con selectores │
+│ └─ Si no existe → Alert + Exit │
 └──────────────┬──────────────────────┘
-               │
-               ▼
+│
+▼
 ┌─────────────────────────────────────┐
-│  3. Preparar input                  │
-│     ├─ focus()                      │
-│     ├─ click()                      │
-│     ├─ sleep(100ms)                 │
-│     └─ Limpiar textContent          │
+│ 3. Preparar input │
+│ ├─ focus() │
+│ ├─ click() │
+│ ├─ sleep(100ms) │
+│ └─ Limpiar textContent │
 └──────────────┬──────────────────────┘
-               │
-               ▼
+│
+▼
 ┌─────────────────────────────────────┐
-│  4. FOR LOOP (cada carácter)        │
+│ 4. FOR LOOP (cada carácter) │
 └──────────────┬──────────────────────┘
-               │
-               ▼
-       ┌───────┴───────┐
-       │               │
-       ▼               ▼
-┌─────────────┐  ┌────────────────┐
-│ char === \n │  │ char normal    │
-└─────┬───────┘  └────────┬───────┘
-      │                   │
-      ▼                   ▼
-┌─────────────┐  ┌────────────────┐
-│ PROBLEMA    │  │ Dispatch Events│
-│ Convertir a │  │ ├─ keydown     │
-│ espacio (×) │  │ ├─ keypress    │
-└─────────────┘  │ ├─ insertText  │
-                 │ ├─ input       │
-                 │ └─ keyup       │
-                 └────────┬───────┘
-                          │
-                          ▼
-                 ┌────────────────┐
-                 │ Delay gaussiano│
-                 │ + Pausa puntua.│
-                 └────────┬───────┘
-                          │
-                          ▼
-               ┌─────────────────────┐
-               │  Loop continúa...   │
-               └──────────┬──────────┘
-                          │
-               ▼──────────┴──────────▼
+│
+▼
+┌───────┴───────┐
+│ │
+▼ ▼
+┌─────────────┐ ┌────────────────┐
+│ char === \n │ │ char normal │
+└─────┬───────┘ └────────┬───────┘
+│ │
+▼ ▼
+┌─────────────┐ ┌────────────────┐
+│ PROBLEMA │ │ Dispatch Events│
+│ Convertir a │ │ ├─ keydown │
+│ espacio (×) │ │ ├─ keypress │
+└─────────────┘ │ ├─ insertText │
+│ ├─ input │
+│ └─ keyup │
+└────────┬───────┘
+│
+▼
+┌────────────────┐
+│ Delay gaussiano│
+│ + Pausa puntua.│
+└────────┬───────┘
+│
+▼
+┌─────────────────────┐
+│ Loop continúa... │
+└──────────┬──────────┘
+│
+▼──────────┴──────────▼
 ┌─────────────────────────────────────┐
-│  5. Triggers finales                │
-│     ├─ dispatchEvent("input")       │
-│     └─ dispatchEvent("change")      │
+│ 5. Triggers finales │
+│ ├─ dispatchEvent("input") │
+│ └─ dispatchEvent("change") │
 └──────────────┬──────────────────────┘
-               │
-               ▼
+│
+▼
 ┌─────────────────────────────────────┐
-│  6. Auto-envío (si habilitado)      │
-│     ├─ sleep(300ms)                 │
-│     └─ sendButton.click()           │
+│ 6. Auto-envío (si habilitado) │
+│ ├─ sleep(300ms) │
+│ └─ sendButton.click() │
 └──────────────┬──────────────────────┘
-               │
-               ▼
+│
+▼
 ┌─────────────────────────────────────┐
-│  7. Remover indicador UI            │
+│ 7. Remover indicador UI │
 └─────────────────────────────────────┘
-```
+
+````
 
 ---
 
@@ -430,7 +455,7 @@ for (char of text) {
   insertChar(char);
   await sleep(100); // Siempre 100ms → PATRÓN ROBÓTICO
 }
-```
+````
 
 **Solución con distribución gaussiana:**
 

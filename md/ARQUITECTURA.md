@@ -47,6 +47,7 @@ Los archivos se cargan en este orden específico (definido en `manifest.json`):
 - `sleep()` - Helper de delays asíncronos
 
 **Variables globales:**
+
 - `window.cancelTyping` - Flag para cancelar escritura en progreso
 - `window.isTyping` - Flag indicando si está escribiendo actualmente
 
@@ -82,6 +83,7 @@ Los archivos se cargan en este orden específico (definido en `manifest.json`):
 - **Botón de cancelar** - Se crea en sidebar y se muestra/oculta durante tipeo
 
 **Elementos UI:**
+
 - Barra de búsqueda con filtrado en tiempo real
 - Botones exportar/importar (📤📥)
 - Control de velocidad (slider: Lento/Normal/Rápido)
@@ -91,10 +93,12 @@ Los archivos se cargan en este orden específico (definido en `manifest.json`):
 ### init.js (Entry Point + Export/Import)
 
 **Configuración global:**
+
 - `FOLDER_COLORS` - Array de 8 colores predefinidos con valores y variantes
 - `appData` - Estado global de la aplicación
 
 **Funciones:**
+
 - `exportFoldersAndMessages()` - Exporta datos a JSON incluyendo secuencias
 - `importFoldersAndMessages()` - Importa y valida datos JSON con normalización
 - `init()` - Función principal de inicialización

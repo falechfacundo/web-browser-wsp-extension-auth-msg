@@ -38,6 +38,7 @@ Las **secuencias de mensajes** permiten programar múltiples mensajes que se env
 ### Mensaje Normal vs Secuencia
 
 **Mensaje Normal:**
+
 ```javascript
 {
   id: "id-1234567890-abc",
@@ -47,6 +48,7 @@ Las **secuencias de mensajes** permiten programar múltiples mensajes que se env
 ```
 
 **Secuencia:**
+
 ```javascript
 {
   id: "id-1234567890-xyz",
@@ -113,7 +115,7 @@ Las **secuencias de mensajes** permiten programar múltiples mensajes que se env
                │     (6x más largo que entre caracteres)
                │
                └───► Siguiente mensaje...
-               
+
                │
                ▼
 ┌─────────────────────────────────────────┐
@@ -126,26 +128,31 @@ Las **secuencias de mensajes** permiten programar múltiples mensajes que se env
 ```javascript
 async function useMessageSequence(sequence, sequenceId) {
   // 1. Marcar secuencia como "escribiendo"
-  const sequenceElement = document.querySelector(`[data-sequence-id="${sequenceId}"]`);
+  const sequenceElement = document.querySelector(
+    `[data-sequence-id="${sequenceId}"]`,
+  );
   if (sequenceElement) {
     sequenceElement.classList.add("waqm-message-writing");
   }
-  
+
   // 2. Iterar sobre cada sub-mensaje
   for (let i = 0; i < sequence.length; i++) {
     // Chequear cancelación
     if (window.cancelTyping) break;
-    
+
     // Escribir mensaje
     await window.useMessage(sequence[i].text, sequence[i].id);
-    
+
     // Delay entre mensajes (si no es el último)
     if (i < sequence.length - 1 && !window.cancelTyping) {
-      const delay = gaussianRandom(delayParams.baseMean * 6, delayParams.baseStdDev * 2);
+      const delay = gaussianRandom(
+        delayParams.baseMean * 6,
+        delayParams.baseStdDev * 2,
+      );
       await sleep(delay);
     }
   }
-  
+
   // 3. Limpiar animación
   if (sequenceElement) {
     sequenceElement.classList.remove("waqm-message-writing");
@@ -157,16 +164,16 @@ async function useMessageSequence(sequence, sequenceId) {
 
 ## Diferencias con Mensajes Normales
 
-| Aspecto | Mensaje Normal | Secuencia |
-|---------|---------------|-----------|
-| **Estructura** | `{id, name, text}` | `{id, type: 'sequence', name, sequence: [...]}` |
-| **Campo 'name'** | Sí, para identificar en sidebar | Solo en secuencia completa, NO en sub-mensajes |
-| **Ejecución** | Un solo mensaje | Múltiples mensajes consecutivos |
-| **Delays** | Entre caracteres | Entre caracteres + entre mensajes |
-| **Animación** | Elemento individual | Elemento de secuencia completo |
-| **Edición** | Nombre + texto | Nombre + lista de sub-mensajes |
-| **Icono en sidebar** | ✅ | ✅ (mismo, no diferencia visual en botón) |
-| **Preview** | Primeras 50 caracteres | Lista numerada de sub-mensajes |
+| Aspecto              | Mensaje Normal                  | Secuencia                                       |
+| -------------------- | ------------------------------- | ----------------------------------------------- |
+| **Estructura**       | `{id, name, text}`              | `{id, type: 'sequence', name, sequence: [...]}` |
+| **Campo 'name'**     | Sí, para identificar en sidebar | Solo en secuencia completa, NO en sub-mensajes  |
+| **Ejecución**        | Un solo mensaje                 | Múltiples mensajes consecutivos                 |
+| **Delays**           | Entre caracteres                | Entre caracteres + entre mensajes               |
+| **Animación**        | Elemento individual             | Elemento de secuencia completo                  |
+| **Edición**          | Nombre + texto                  | Nombre + lista de sub-mensajes                  |
+| **Icono en sidebar** | ✅                              | ✅ (mismo, no diferencia visual en botón)       |
+| **Preview**          | Primeras 50 caracteres          | Lista numerada de sub-mensajes                  |
 
 ---
 
@@ -246,6 +253,7 @@ El modal tiene un **toggle** en la parte superior:
 ### ¿Por Qué 6x?
 
 Un humano naturalmente hace una pausa más larga entre mensajes separados que entre caracteres:
+
 - Tiempo para pensar qué escribir
 - Revisar el mensaje anterior
 - Decidir si presionar Enter
@@ -258,8 +266,8 @@ El factor 6x simula este comportamiento realista.
 if (i < sequence.length - 1 && !window.cancelTyping) {
   const delayParams = getTypingDelayParams();
   const delay = gaussianRandom(
-    delayParams.baseMean * 6,    // 6x el delay base
-    delayParams.baseStdDev * 2   // 2x la desviación estándar
+    delayParams.baseMean * 6, // 6x el delay base
+    delayParams.baseStdDev * 2, // 2x la desviación estándar
   );
   await sleep(delay);
 }
@@ -290,7 +298,7 @@ Escritura:
   Mensaje 1: "Hola!" ✅ (completo)
   Delay: ~700ms
   Mensaje 2: "Bienv..." ❌ (usuario cancela aquí)
-  
+
 Resultado:
   - Campo de WhatsApp queda limpio
   - Secuencia se marca como NO escribiendo
@@ -300,22 +308,26 @@ Resultado:
 ### Código de Chequeo
 
 **En `useMessageSequence()`:**
+
 ```javascript
 for (let i = 0; i < sequence.length; i++) {
   if (window.cancelTyping) break; // ← Chequeo 1
-  
+
   await useMessage(sequence[i].text, sequence[i].id);
-  
-  if (i < sequence.length - 1 && !window.cancelTyping) { // ← Chequeo 2
+
+  if (i < sequence.length - 1 && !window.cancelTyping) {
+    // ← Chequeo 2
     // delay...
   }
 }
 ```
 
 **En `useMessage()`:**
+
 ```javascript
 for (let i = 0; i < text.length; i++) {
-  if (window.cancelTyping) { // ← Chequeo 3
+  if (window.cancelTyping) {
+    // ← Chequeo 3
     inputBox.textContent = "";
     // limpiar y salir
     return;
@@ -331,6 +343,7 @@ for (let i = 0; i < text.length; i++) {
 ### 1. Proceso de Ventas
 
 **Secuencia: "Oferta de servicio"**
+
 1. "Hola! Vi que estabas interesado en nuestro producto 😊"
 2. "Tenemos una oferta especial esta semana"
 3. "¿Te gustaría conocer los detalles?"
@@ -338,6 +351,7 @@ for (let i = 0; i < text.length; i++) {
 ### 2. Onboarding de Cliente
 
 **Secuencia: "Bienvenida nuevo usuario"**
+
 1. "¡Bienvenido a [Empresa]! 🎉"
 2. "Estoy aquí para ayudarte con cualquier duda"
 3. "Para empezar, cuéntame: ¿qué te interesa más de nuestro servicio?"
@@ -345,6 +359,7 @@ for (let i = 0; i < text.length; i++) {
 ### 3. Seguimiento Post-Venta
 
 **Secuencia: "Check-in cliente"**
+
 1. "Hola! ¿Cómo va todo con tu compra?"
 2. "Quería asegurarme de que estés satisfecho con el producto"
 3. "Si tienes alguna pregunta, no dudes en escribirme"
@@ -352,6 +367,7 @@ for (let i = 0; i < text.length; i++) {
 ### 4. Tutorial paso a paso
 
 **Secuencia: "Instrucciones de uso"**
+
 1. "Te voy a explicar cómo usar la plataforma paso a paso"
 2. "Primero, ingresa a www.ejemplo.com e inicia sesión"
 3. "Una vez dentro, ve a la sección 'Mi cuenta'"
@@ -366,20 +382,23 @@ for (let i = 0; i < text.length; i++) {
 Si una versión anterior tenía sub-mensajes con campo 'name', la migración los elimina automáticamente:
 
 **Antes (legacy):**
+
 ```javascript
 sequence: [
-  { id: "123", name: "Paso 1", text: "Hola" } // ❌ name innecesario
-]
+  { id: "123", name: "Paso 1", text: "Hola" }, // ❌ name innecesario
+];
 ```
 
 **Después (normalizado):**
+
 ```javascript
 sequence: [
-  { id: "123", text: "Hola" } // ✅ solo id y text
-]
+  { id: "123", text: "Hola" }, // ✅ solo id y text
+];
 ```
 
 **Ubicaciones de normalización:**
+
 - `storage.js` → `loadData()` al cargar datos
 - `init.js` → `importFoldersAndMessages()` al importar JSON
 
@@ -396,9 +415,10 @@ En el array `folder.messages`, se distinguen por el campo `type`:
 ```
 
 **Renderizado:**
+
 ```javascript
 folder.messages.forEach((message) => {
-  if (message.type === 'sequence') {
+  if (message.type === "sequence") {
     const seqEl = createSequenceElement(message, folder.id);
     messagesContainer.appendChild(seqEl);
   } else {
@@ -435,6 +455,7 @@ La clase `waqm-message-writing` se aplica al **elemento completo de la secuencia
 Las secuencias se exportan e importan correctamente:
 
 **Exportación:**
+
 ```javascript
 if (msg.type === "sequence") {
   return {
@@ -450,6 +471,7 @@ if (msg.type === "sequence") {
 ```
 
 **Importación:**
+
 ```javascript
 if (msg.type === "sequence") {
   return {
@@ -472,11 +494,13 @@ if (msg.type === "sequence") {
 ### La secuencia no se ejecuta completa
 
 **Posibles causas:**
+
 1. Usuario canceló manualmente (botón rojo)
 2. Error en WhatsApp Web (campo de entrada no encontrado)
 3. Conexión perdida durante la secuencia
 
-**Solución:** 
+**Solución:**
+
 - Reabrir conversación en WhatsApp Web
 - Verificar que el campo de texto esté visible
 - Intentar nuevamente
@@ -486,6 +510,7 @@ if (msg.type === "sequence") {
 **Causa:** Velocidad de tipeo configurada incorrecta
 
 **Solución:**
+
 - Ajustar slider de velocidad (Lento/Normal/Rápido)
 - Los delays entre mensajes son 6x los delays entre caracteres
 
@@ -494,6 +519,7 @@ if (msg.type === "sequence") {
 **Causa:** Envío automático activado
 
 **Solución:**
+
 - Desactivar toggle "Envío automático" si quieres revisar antes
 
 ### No puedo reordenar sub-mensajes
@@ -501,6 +527,7 @@ if (msg.type === "sequence") {
 **Causa:** Modal cerrado sin guardar o error de UI
 
 **Solución:**
+
 - Asegurarse de guardar cambios antes de cerrar modal
 - Usar botones ⬆️⬇️ para reordenar
 - Los cambios solo se persisten al hacer clic en "Guardar"

@@ -443,6 +443,7 @@
 ### En `window` (compartidas entre módulos)
 
 **Datos:**
+
 - `window.FOLDER_COLORS` - Array de 8 objetos `{name, value, light}`
 - `window.appData` - Objeto con:
   - `typingSpeed`: "slow" | "normal" | "fast"
@@ -451,6 +452,7 @@
   - `folders`: Array de carpetas con mensajes y secuencias
 
 **Flags de control:**
+
 - `window.cancelTyping` - Boolean para cancelar escritura en progreso
 - `window.isTyping` - Boolean indicando si está escribiendo actualmente
 

@@ -11,16 +11,36 @@ window.useMessageSequence = async function (sequence, sequenceId = null) {
     }
   }
 
+  const debugMode = window.appData ? window.appData.debugMode : false;
   const delayParams = window.getTypingDelayParams
     ? window.getTypingDelayParams()
     : { baseMean: 120, baseStdDev: 25 };
+
   for (let i = 0; i < sequence.length; i++) {
     // Chequear si se canceló
     if (window.cancelTyping) {
       break;
     }
+
     await window.useMessage(sequence[i].text, sequence[i].id);
+
     if (i < sequence.length - 1 && !window.cancelTyping) {
+      // Insertar saltos de línea para separar mensajes de la secuencia
+      const inputBox = window.findWhatsAppInputBox
+        ? window.findWhatsAppInputBox()
+        : null;
+
+      if (inputBox) {
+        // Insertar un salto de línea
+        await window.insertLineBreakHuman(inputBox, debugMode);
+
+        // Pequeño delay después del salto de línea
+        const lineBreakDelay = window.gaussianRandom
+          ? window.gaussianRandom(150, 30)
+          : 150;
+        await window.sleep(lineBreakDelay);
+      }
+
       // Delay gaussiano natural entre mensajes
       const delay = window.gaussianRandom
         ? window.gaussianRandom(

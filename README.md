@@ -5,6 +5,7 @@ Extensión de Chrome para guardar y usar mensajes predeterminados en WhatsApp We
 ## ✨ Características
 
 ### 🎯 Core
+
 - **Barra lateral integrada** en WhatsApp Web sin romper el layout
 - **Organización por carpetas** con colores personalizables
 - **Escritura simulada** carácter por carácter con distribución gaussiana (efecto humano realista)
@@ -12,6 +13,7 @@ Extensión de Chrome para guardar y usar mensajes predeterminados en WhatsApp We
 - **Interfaz intuitiva** con botones para agregar, editar y eliminar
 
 ### 🚀 Funcionalidades Avanzadas
+
 - **Secuencias de mensajes** - Envía múltiples mensajes consecutivos automáticamente
 - **Exportar/Importar** - Respalda y comparte tus categorías y mensajes (formato JSON)
 - **Búsqueda inteligente** - Encuentra carpetas y mensajes rápidamente (insensible a acentos)
@@ -48,6 +50,7 @@ Extensión de Chrome para guardar y usar mensajes predeterminados en WhatsApp We
 **[📖 Lee la guía completa para Brave aquí](BRAVE.md)**
 
 **Resumen rápido**:
+
 1. Instala la extensión como en Chrome (`brave://extensions/`)
 2. **Desactiva Brave Shields** para WhatsApp Web (icono del león en la barra de direcciones)
 3. Recarga WhatsApp Web (F5)
@@ -74,12 +77,14 @@ Si la barra lateral no aparece, **haz clic en el icono del león 🦁** en Whats
 ### Agregar mensajes
 
 #### Mensaje simple
+
 1. Dentro de una carpeta, haz clic en **"➕ Nuevo Mensaje"**
 2. Ingresa un **nombre** para identificar el mensaje (ej: "Saludo formal")
 3. Ingresa el **texto completo** del mensaje (soporta múltiples líneas)
 4. Haz clic en **Guardar**
 
 #### Secuencia de mensajes
+
 1. Dentro de una carpeta, haz clic en **"➕ Nuevo Mensaje"**
 2. **Activa el toggle "Secuencia de mensajes"**
 3. Ingresa un nombre para la secuencia (ej: "Proceso de bienvenida")
@@ -114,11 +119,13 @@ Si la barra lateral no aparece, **haz clic en el icono del león 🦁** en Whats
 ### Exportar/Importar
 
 #### Exportar
+
 1. Haz clic en el botón **📤** en la barra superior
 2. Se descargará un archivo JSON con todas tus categorías y mensajes
 3. Úsalo para respaldo o para compartir con otros dispositivos
 
 #### Importar
+
 1. Haz clic en el botón **📥** en la barra superior
 2. Selecciona un archivo JSON previamente exportado
 3. Confirma para reemplazar tus datos actuales
@@ -184,6 +191,7 @@ Para más detalles técnicos, consulta [md/ARQUITECTURA.md](md/ARQUITECTURA.md)
 ### Estructura de Datos
 
 **Mensaje normal:**
+
 ```javascript
 {
   id: "id-1234567890-abc",
@@ -193,6 +201,7 @@ Para más detalles técnicos, consulta [md/ARQUITECTURA.md](md/ARQUITECTURA.md)
 ```
 
 **Secuencia de mensajes:**
+
 ```javascript
 {
   id: "id-1234567890-xyz",
@@ -209,6 +218,7 @@ Para más detalles técnicos, consulta [md/ARQUITECTURA.md](md/ARQUITECTURA.md)
 ### Exportar/Importar
 
 El formato de exportación es JSON compatible:
+
 ```json
 {
   "folders": [
@@ -270,11 +280,13 @@ La función `useMessage()` busca el campo de entrada de WhatsApp Web (un `div` c
 ### La barra lateral no aparece
 
 **En Chrome/Edge**:
+
 - Verifica que estás en `web.whatsapp.com`
 - Recarga la página (F5)
 - Asegúrate de que la extensión está habilitada en `chrome://extensions/`
 
 **En Brave** 🦁:
+
 - **Desactiva Brave Shields** para WhatsApp Web (icono del león)
 - Recarga la página (F5)
 - Abre la consola (F12) y busca mensajes de la extensión
@@ -295,6 +307,7 @@ La función `useMessage()` busca el campo de entrada de WhatsApp Web (un `div` c
 ### Ver logs de debugging
 
 Abre la consola del navegador (F12) para ver mensajes detallados:
+
 ```
 [WhatsApp Mensajes Rápidos] Inicializando en Chrome/Brave...
 [WhatsApp Mensajes Rápidos] ✅ Extensión cargada exitosamente!
