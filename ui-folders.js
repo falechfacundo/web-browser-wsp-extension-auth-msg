@@ -110,121 +110,7 @@ function createFolderElement(folder) {
       messagesContainer.appendChild(messageEl);
     }
   });
-  // Agregar mensaje o secuencia (modal unificado)
-  async function addMessageOrSequence(folderId) {
-    const folder = window.appData.folders.find((f) => f.id === folderId);
-    if (!folder) return;
-    const result = await window.showMessageModal({
-      title: "Nuevo mensaje o secuencia",
-    });
-    if (!result) return;
-    if (result.isSequence) {
-      // Efecto visual: fondo especial para secuencia
-      const newSeq = {
-        id: window.generateId(),
-        type: "sequence",
-        name: result.name,
-        sequence: result.sequence,
-      };
-      folder.messages.push(newSeq);
-    } else {
-      const newMessage = {
-        id: window.generateId(),
-        name: result.name,
-        text: result.text,
-      };
-      folder.messages.push(newMessage);
-    }
-    window.saveData();
-    renderFolders();
-  }
-  // Crear elemento DOM para una secuencia de mensajes
-  function createSequenceElement(sequence, folderId) {
-    const seqDiv = document.createElement("div");
-    seqDiv.className = "waqm-sequence waqm-message"; // Efecto visual similar a mensaje
-    seqDiv.dataset.sequenceId = sequence.id;
-    seqDiv.dataset.messageId = sequence.id; // Para compatibilidad con drag and drop
-    seqDiv.dataset.folderId = folderId;
-    seqDiv.draggable = true;
 
-    seqDiv.innerHTML = `
-    <div class="waqm-message-content">
-      <div class="waqm-message-name">${window.escapeHtml(sequence.name)}</div>
-      <div class="waqm-sequence-messages">
-        ${sequence.sequence
-          .map(
-            (msg, idx) => `
-          <div class="waqm-sequence-message">
-            <span class="waqm-sequence-step">${idx + 1}.</span>
-            <span class="waqm-sequence-msg-preview">${window.escapeHtml((msg.text || "").substring(0, 50))}${(msg.text || "").length > 50 ? "..." : ""}</span>
-          </div>
-        `,
-          )
-          .join("")}
-      </div>
-    </div>
-    <div class="waqm-message-actions">
-      <button class="waqm-btn-icon" title="Usar secuencia" data-action="use-sequence">✅</button>
-      <button class="waqm-btn-icon" title="Editar secuencia" data-action="edit-sequence">✏️</button>
-      <button class="waqm-btn-icon" title="Eliminar secuencia" data-action="delete-sequence">🗑️</button>
-    </div>
-  `;
-
-    // Acciones de secuencia
-    seqDiv.querySelector('[data-action="use-sequence"]').onclick = () => {
-      window.useMessageSequence(sequence.sequence, sequence.id);
-    };
-    seqDiv.querySelector('[data-action="edit-sequence"]').onclick = () => {
-      editSequence(folderId, sequence.id);
-    };
-    seqDiv.querySelector('[data-action="delete-sequence"]').onclick = () => {
-      deleteSequence(folderId, sequence.id);
-    };
-
-    // Drag and drop events
-    setupDragAndDrop(seqDiv);
-
-    return seqDiv;
-  }
-
-  // Agregar nueva secuencia
-  async function addSequence(folderId) {
-    // Ya no se usa, reemplazado por addMessageOrSequence
-  }
-
-  // Editar secuencia
-  async function editSequence(folderId, sequenceId) {
-    const folder = window.appData.folders.find((f) => f.id === folderId);
-    if (!folder) return;
-    const seq = folder.messages.find(
-      (m) => m.id === sequenceId && m.type === "sequence",
-    );
-    if (!seq) return;
-    // Modal unificado para editar secuencia
-    const result = await window.showMessageModal({
-      title: "Editar secuencia",
-      nameValue: seq.name,
-      sequenceValue: seq.sequence,
-      isSequence: true,
-    });
-    if (result && result.isSequence) {
-      seq.name = result.name;
-      seq.sequence = result.sequence;
-      window.saveData();
-      renderFolders();
-    }
-  }
-
-  // Eliminar secuencia
-  function deleteSequence(folderId, sequenceId) {
-    const folder = window.appData.folders.find((f) => f.id === folderId);
-    if (!folder) return;
-    if (confirm("¿Eliminar esta secuencia de mensajes?")) {
-      folder.messages = folder.messages.filter((m) => m.id !== sequenceId);
-      window.saveData();
-      renderFolders();
-    }
-  }
 
   folderDiv.appendChild(folderHeader);
   folderDiv.appendChild(messagesContainer);
@@ -536,6 +422,120 @@ function deleteMessage(folderId, messageId) {
   }
 }
 
+// ==================== FUNCIONES DE SECUENCIAS ====================
+
+// Crear elemento DOM para una secuencia de mensajes
+function createSequenceElement(sequence, folderId) {
+  const seqDiv = document.createElement("div");
+  seqDiv.className = "waqm-sequence waqm-message"; // Efecto visual similar a mensaje
+  seqDiv.dataset.sequenceId = sequence.id;
+  seqDiv.dataset.messageId = sequence.id; // Para compatibilidad con drag and drop
+  seqDiv.dataset.folderId = folderId;
+  seqDiv.draggable = true;
+
+  seqDiv.innerHTML = `
+    <div class="waqm-message-content">
+      <div class="waqm-message-name">${window.escapeHtml(sequence.name)}</div>
+      <div class="waqm-sequence-messages">
+        ${sequence.sequence
+          .map(
+            (msg, idx) => `
+          <div class="waqm-sequence-message">
+            <span class="waqm-sequence-step">${idx + 1}.</span>
+            <span class="waqm-sequence-msg-preview">${window.escapeHtml((msg.text || "").substring(0, 50))}${(msg.text || "").length > 50 ? "..." : ""}</span>
+          </div>
+        `,
+          )
+          .join("")}
+      </div>
+    </div>
+    <div class="waqm-message-actions">
+      <button class="waqm-btn-icon" title="Usar secuencia" data-action="use-sequence">✅</button>
+      <button class="waqm-btn-icon" title="Editar secuencia" data-action="edit-sequence">✏️</button>
+      <button class="waqm-btn-icon" title="Eliminar secuencia" data-action="delete-sequence">🗑️</button>
+    </div>
+  `;
+
+  // Acciones de secuencia
+  seqDiv.querySelector('[data-action="use-sequence"]').onclick = () => {
+    window.useMessageSequence(sequence.sequence, sequence.id);
+  };
+  seqDiv.querySelector('[data-action="edit-sequence"]').onclick = () => {
+    editSequence(folderId, sequence.id);
+  };
+  seqDiv.querySelector('[data-action="delete-sequence"]').onclick = () => {
+    deleteSequence(folderId, sequence.id);
+  };
+
+  // Drag and drop events
+  setupDragAndDrop(seqDiv);
+
+  return seqDiv;
+}
+
+// Agregar mensaje o secuencia (modal unificado)
+async function addMessageOrSequence(folderId) {
+  const folder = window.appData.folders.find((f) => f.id === folderId);
+  if (!folder) return;
+  const result = await window.showMessageModal({
+    title: "Nuevo mensaje o secuencia",
+  });
+  if (!result) return;
+  if (result.isSequence) {
+    // Efecto visual: fondo especial para secuencia
+    const newSeq = {
+      id: window.generateId(),
+      type: "sequence",
+      name: result.name,
+      sequence: result.sequence,
+    };
+    folder.messages.push(newSeq);
+  } else {
+    const newMessage = {
+      id: window.generateId(),
+      name: result.name,
+      text: result.text,
+    };
+    folder.messages.push(newMessage);
+  }
+  window.saveData();
+  renderFolders();
+}
+
+// Editar secuencia
+async function editSequence(folderId, sequenceId) {
+  const folder = window.appData.folders.find((f) => f.id === folderId);
+  if (!folder) return;
+  const seq = folder.messages.find(
+    (m) => m.id === sequenceId && m.type === "sequence",
+  );
+  if (!seq) return;
+  // Modal unificado para editar secuencia
+  const result = await window.showMessageModal({
+    title: "Editar secuencia",
+    nameValue: seq.name,
+    sequenceValue: seq.sequence,
+    isSequence: true,
+  });
+  if (result && result.isSequence) {
+    seq.name = result.name;
+    seq.sequence = result.sequence;
+    window.saveData();
+    renderFolders();
+  }
+}
+
+// Eliminar secuencia
+function deleteSequence(folderId, sequenceId) {
+  const folder = window.appData.folders.find((f) => f.id === folderId);
+  if (!folder) return;
+  if (confirm("¿Eliminar esta secuencia de mensajes?")) {
+    folder.messages = folder.messages.filter((m) => m.id !== sequenceId);
+    window.saveData();
+    renderFolders();
+  }
+}
+
 // Exportar funciones
 window.renderFolders = renderFolders;
 window.createFolderElement = createFolderElement;
@@ -550,3 +550,6 @@ window.deleteFolder = deleteFolder;
 window.addMessage = addMessage;
 window.editMessage = editMessage;
 window.deleteMessage = deleteMessage;
+window.addMessageOrSequence = addMessageOrSequence;
+window.editSequence = editSequence;
+window.deleteSequence = deleteSequence;
